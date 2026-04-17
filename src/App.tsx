@@ -79,7 +79,7 @@ export default function App() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Rohit Studio - Form Data Submitted:', formData);
+    console.log('Pulse Studio - Form Data Submitted:', formData);
     // In future: hook to backend database
     setFormData({ name: '', email: '', message: '' });
   };
@@ -167,7 +167,7 @@ export default function App() {
 
       <header className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex flex-row items-center justify-between px-4 py-3 w-[90%] max-w-5xl bg-white/20 backdrop-blur-lg backdrop-saturate-[1.2] border border-white/20 rounded-2xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.06)] transition-all duration-500 hover:bg-white/30">
         <div className="pl-2 text-[17px] font-semibold text-black/90 tracking-tight" style={{ fontFamily: 'var(--font-body)' }}>
-          Rohit
+          Pulse
         </div>
         <nav className="hidden md:flex flex-row items-center gap-1">
           <a href="#about" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl hover:bg-white/40 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>About</a>
@@ -309,7 +309,7 @@ export default function App() {
             <FadeIn className="w-full lg:w-1/2">
               <h2 className="text-6xl md:text-[64px] mb-6 leading-none tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Let's work<br/>together.</h2>
               <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-sm">Ready to bring your vision to life? Fill out the form or reach out directly.</p>
-              <a href="mailto:hello@rohit.studio" className="text-base text-foreground underline decoration-border hover:decoration-foreground underline-offset-4 transition-colors font-medium">hello@rohit.studio</a>
+              <a href="mailto:hello@pulse.studio" className="text-base text-foreground underline decoration-border hover:decoration-foreground underline-offset-4 transition-colors font-medium">hello@pulse.studio</a>
 
               <form onSubmit={handleFormSubmit} className="flex flex-col gap-8 mt-12 w-full max-w-md">
                 <div className="relative">
@@ -381,7 +381,7 @@ export default function App() {
           </div>
 
           <FadeIn delay={0.3} className="max-w-7xl mx-auto mt-32 pt-8 border-t border-border/30 flex flex-col md:flex-row justify-between items-center text-[11px] uppercase tracking-widest text-muted-foreground gap-4">
-            <p>&copy; 2026 Rohit Studio. All rights reserved.</p>
+            <p>&copy; 2026 Pulse Studio. All rights reserved.</p>
             <p>Designed with Intent</p>
           </FadeIn>
         </footer>
