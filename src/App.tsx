@@ -3,30 +3,314 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Play, ArrowUpRight } from 'lucide-react';
+import { X, Play, ArrowUpRight, Inbox, Scissors, Palette, CheckCircle, Star, ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react';
 
-const FadeIn = React.forwardRef<HTMLDivElement, { children: React.ReactNode, delay?: number, className?: string }>(
-  ({ children, delay = 0, className = "" }, ref) => (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
-      className={className}
+function useScrollReveal() {
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.reveal-target').forEach((el) => {
+      observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+}
+
+function ScrollCounter({ value, duration = 1600, suffix = "" }: { value: number, duration?: number, suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    
+    let isCounting = false;
+    let observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !isCounting) {
+        isCounting = true;
+        let startTimestamp: number | null = null;
+        
+        const step = (timestamp: number) => {
+          if (!startTimestamp) startTimestamp = timestamp;
+          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+          const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+          setCount(Math.floor(easeOutQuart * value));
+          if (progress < 1) {
+            window.requestAnimationFrame(step);
+          }
+        };
+        window.requestAnimationFrame(step);
+        observer.disconnect();
+      }
+    }, { threshold: 0.15 });
+    
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [value, duration]);
+
+  return <span ref={ref}>{count}{suffix}</span>;
+}
+
+function MagneticButton({ children, href, className, style }: any) {
+  const buttonRef = React.useRef<HTMLAnchorElement>(null);
+
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!buttonRef.current) return;
+      const rect = buttonRef.current.getBoundingClientRect();
+      
+      const dx = Math.max(rect.left - e.clientX, 0, e.clientX - rect.right);
+      const dy = Math.max(rect.top - e.clientY, 0, e.clientY - rect.bottom);
+      const distanceToEdge = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distanceToEdge < 80) {
+        const btnCenterX = rect.left + rect.width / 2;
+        const btnCenterY = rect.top + rect.height / 2;
+        const distanceX = e.clientX - btnCenterX;
+        const distanceY = e.clientY - btnCenterY;
+        
+        buttonRef.current.style.transform = `translate(${distanceX * 0.3}px, ${distanceY * 0.3}px) scale(1.02)`;
+      } else {
+        buttonRef.current.style.transform = `translate(0px, 0px) scale(1)`;
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  return (
+    <a 
+      ref={buttonRef} 
+      href={href} 
+      className={className} 
+      style={{ ...style, transition: 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)' }}
     >
       {children}
-    </motion.div>
-  )
-);
-FadeIn.displayName = 'FadeIn';
+    </a>
+  );
+}
+
+function AnimatedWaveform() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const hoverXRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    let animationFrameId: number;
+    let time = 0;
+    const numBars = 75; // Between 60 and 80
+    const barWidth = 3;
+    
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    if (svg.childNodes.length === 0) {
+      for (let i = 0; i < numBars; i++) {
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("width", barWidth.toString());
+        rect.setAttribute("rx", "1.5");
+        
+        const centerDist = Math.abs(numBars / 2 - i) / (numBars / 2); 
+        const r = Math.round(255 * (1 - centerDist) + 180 * centerDist);
+        const g = Math.round(0 * (1 - centerDist) + 180 * centerDist);
+        const b = Math.round(138 * (1 - centerDist) + 180 * centerDist);
+        
+        rect.setAttribute("fill", `rgb(${r}, ${g}, ${b})`);
+        rect.setAttribute("data-phase", (Math.random() * Math.PI * 2).toString());
+        rect.setAttribute("data-speed", (0.015 + Math.random() * 0.02).toString());
+        rect.setAttribute("data-baseamp", (10 + Math.random() * 20).toString());
+        svg.appendChild(rect);
+      }
+    }
+
+    const render = () => {
+      time += 1;
+      if (!containerRef.current) return;
+      const width = containerRef.current.clientWidth;
+      const height = 80;
+      
+      const actualGap = width > 0 ? Math.max(1, (width - numBars * barWidth) / (numBars - 1)) : 4;
+      const totalWidth = numBars * barWidth + (numBars - 1) * actualGap;
+      const offsetX = width > 0 ? (width - totalWidth) / 2 : 0;
+
+      const rects = Array.from(svg.querySelectorAll("rect"));
+      let hoverIndex: number | null = null;
+      
+      if (hoverXRef.current !== null) {
+        hoverIndex = (hoverXRef.current - offsetX) / (barWidth + actualGap);
+      }
+
+      rects.forEach((rect, i) => {
+        const x = offsetX + i * (barWidth + actualGap);
+        rect.setAttribute("x", x.toString());
+        
+        let edgeFade = 1;
+        const edgeWindow = 15;
+        if (i < edgeWindow) edgeFade = Math.pow(i / edgeWindow, 1.5);
+        if (i > numBars - 1 - edgeWindow) edgeFade = Math.pow((numBars - 1 - i) / edgeWindow, 1.5);
+        
+        const phase = parseFloat(rect.getAttribute("data-phase") || "0");
+        const speed = parseFloat(rect.getAttribute("data-speed") || "0");
+        const baseAmp = parseFloat(rect.getAttribute("data-baseamp") || "0");
+        
+        const wave1 = Math.sin(time * speed + phase);
+        const wave2 = Math.sin(time * speed * 0.5 + phase * 1.5);
+        let baseHeight = (wave1 * 0.6 + wave2 * 0.4) * baseAmp + 15; 
+        
+        let hoverBoost = 0;
+        if (hoverIndex !== null) {
+          const dist = Math.abs(hoverIndex - i);
+          if (dist < 8) {
+            hoverBoost = (8 - dist) * 5; 
+          }
+        }
+        
+        let barHeight = (baseHeight + hoverBoost) * edgeFade;
+        barHeight = Math.max(2 * edgeFade, Math.min(barHeight, height - 2));
+        
+        const y = (height - barHeight) / 2;
+        rect.setAttribute("y", y.toString());
+        rect.setAttribute("height", barHeight.toString());
+        rect.setAttribute("opacity", (0.2 + 0.8 * edgeFade).toString());
+      });
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+    return () => cancelAnimationFrame(animationFrameId);
+  }, []);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    hoverXRef.current = e.clientX - rect.left;
+  };
+
+  const handleMouseLeave = () => {
+    hoverXRef.current = null;
+  };
+
+  return (
+    <div 
+      ref={containerRef}
+      className="w-full h-[80px] relative"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      <svg ref={svgRef} className="w-full h-full" preserveAspectRatio="none" />
+    </div>
+  );
+}
+
+function ProcessTimeline() {
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIsVisible(true);
+        observer.disconnect();
+      }
+    }, { threshold: 0.3 });
+
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const steps = [
+    { title: "Brief & Assets", desc: "You share the raw footage + creative direction", icon: <Inbox size={18} /> },
+    { title: "Rough Cut", desc: "I build the structure, pacing, and narrative flow", icon: <Scissors size={18} /> },
+    { title: "Color & Sound", desc: "Grade, SFX, music sync, and motion refinements", icon: <Palette size={18} /> },
+    { title: "Delivery", desc: "Final export in your format, revisions included", icon: <CheckCircle size={18} /> }
+  ];
+
+  return (
+    <div ref={containerRef} className="w-full max-w-5xl mx-auto mt-16 mb-8 px-4 sm:px-8 relative reveal-target reveal-slide-up" style={{ transitionDelay: '400ms' }}>
+      <div className="flex flex-col md:flex-row justify-between relative w-full gap-8 md:gap-0">
+        
+        {/* Background line */}
+        <div className="absolute left-[19px] md:left-[12.5%] top-[20px] md:top-[19px] h-[calc(100%-40px)] md:h-[2px] w-[2px] md:w-[75%] bg-border/40 z-0" />
+
+        {/* Foreground animated svg line */}
+        <svg 
+          className="absolute left-[19px] md:left-[12.5%] top-[20px] md:top-[19px] h-[calc(100%-40px)] md:h-[2px] w-[2px] md:w-[75%] z-0 overflow-visible pointer-events-none"
+        >
+          {/* Vertical line (Mobile) */}
+          <line 
+            x1="0" y1="0" 
+            x2="0" y2="100%" 
+            pathLength="100"
+            className="md:hidden stroke-[#FF008A]"
+            strokeWidth="2"
+            strokeDasharray="100"
+            strokeDashoffset={isVisible ? "0" : "100"}
+            style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s' }}
+          />
+          {/* Horizontal line (Desktop) */}
+          <line 
+            x1="0" y1="0" 
+            x2="100%" y2="0" 
+            pathLength="100"
+            className="hidden md:block stroke-[#FF008A]"
+            strokeWidth="2"
+            strokeDasharray="100"
+            strokeDashoffset={isVisible ? "0" : "100"}
+            style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s' }}
+          />
+        </svg>
+
+        {steps.map((step, i) => (
+          <div 
+            key={i} 
+            className={`relative z-10 flex flex-row md:flex-col items-center md:items-start text-left md:text-center w-full md:w-1/4 transition-all duration-500 ease-out 
+              ${isVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-[0.6] translate-y-4'}`}
+            style={{ transitionDelay: `${i * 200 + 400}ms` }}
+          >
+            <div className="w-[40px] h-[40px] rounded-full bg-background border-2 border-[#FF008A] text-[#FF008A] flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(255,0,138,0.4)] mx-0 md:mx-auto mb-0 md:mb-5 bg-[#050505]">
+              {step.icon}
+            </div>
+            <div className="pl-6 md:pl-0 flex-1 md:w-full flex md:items-center flex-col md:px-3">
+              <h4 className="font-bold text-[0.9rem] text-foreground tracking-tight mb-2">{step.title}</h4>
+              <p className="text-[0.75rem] text-muted-foreground leading-relaxed">{step.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const CATEGORY_COLORS: Record<string, string> = {
+  'Motion Graphics': '#4F7FFF',
+  'Map Animation': '#22c55e',
+  '2D Hoodie Guy Style': '#f97316',
+  '2D Animation': '#a855f7',
+  'SaaS Animation': '#06b6d4',
+  'AMV': '#e94dff',
+  'Typography': '#eab308',
+  'Simple Shorts': '#ef4444'
+};
+
+const FILTER_CATEGORIES = ['All', ...Object.keys(CATEGORY_COLORS)];
 
 interface Project {
   id: number;
   title: string;
+  category: string;
   type: string;
+  mediaType: 'video' | 'image';
   description: string;
   videoUrl: string;
   poster: string;
@@ -36,41 +320,489 @@ const projects: Project[] = [
   {
     id: 1,
     title: 'Echoes of Time',
+    category: 'Motion Graphics',
     type: 'Short Film',
-    description: 'A nonlinear narrative exploring the concept of memory and its decay. Edited to reflect the fragmented nature of recollection, using jarring cuts and slow dissolves to simulate fading neural pathways.',
+    mediaType: 'image',
+    description: 'A nonlinear narrative exploring memory decay with dynamic motion graphics and typography, ensuring perfect visual flow.',
     videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
-    poster: 'https://picsum.photos/seed/EchoesTime/1024/768'
+    poster: 'https://picsum.photos/seed/Echoes/1024/768'
   },
   {
     id: 2,
     title: 'Neon Silence',
+    category: 'AMV',
     type: 'Music Video',
-    description: 'A high-energy, visually striking piece set to an electronic soundtrack. Emphasizes rhythm through precise frame-pacing, synthetic overlays, and bold, high-contrast color grading.',
+    mediaType: 'video',
+    description: 'A high-energy, visually striking piece set to an electronic soundtrack. Emphasizes rhythm through precise frame-pacing.',
     videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
-    poster: 'https://picsum.photos/seed/NeonSilence/1024/768'
+    poster: 'https://picsum.photos/seed/Neon/1024/768'
   },
   {
     id: 3,
-    title: 'Wanderlust',
-    type: 'Commercial',
-    description: 'A fast-paced travel campaign capturing the thrill of discovery. We utilized dynamic, invisible wipe transitions and sweeping drone cinematography to connect completely disparate global landscapes seamlessly.',
+    title: 'Global Paths',
+    category: 'Map Animation',
+    type: 'Documentary',
+    mediaType: 'video',
+    description: 'Intricate 3D map animations detailing historical trade routes with high precision terrain topology.',
     videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
-    poster: 'https://picsum.photos/seed/Wanderlust/1024/768'
+    poster: 'https://picsum.photos/seed/Map3/1024/768'
   },
   {
     id: 4,
-    title: 'Abstract Reality',
-    type: 'Experimental',
-    description: 'A structural exploration of raw form and sound. Utilizing extreme macro close-ups, brutalist Foley artistry, and avant-garde composition techniques to unsettle and mesmerize the viewer.',
+    title: 'The Explainers',
+    category: '2D Hoodie Guy Style',
+    type: 'YouTube Edutainment',
+    mediaType: 'image',
+    description: 'Classic YouTube edutainment animation utilizing the popular 2D avatar persona for high retention storytelling.',
     videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
-    poster: 'https://picsum.photos/seed/AbstractReality/1024/768'
+    poster: 'https://picsum.photos/seed/HoodieGuy/1024/768'
+  },
+  {
+    id: 5,
+    title: 'B2B Flow',
+    category: 'SaaS Animation',
+    type: 'Commercial',
+    mediaType: 'video',
+    description: 'Sleek, isometric UI/UX animations demonstrating the core value proposition of an enterprise data platform.',
+    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
+    poster: 'https://picsum.photos/seed/B2B/1024/768'
+  },
+  {
+    id: 6,
+    title: 'Kinetic Words',
+    category: 'Typography',
+    type: 'Lyric Video',
+    mediaType: 'video',
+    description: 'Fast-paced lyric video utilizing brutalist typography and dynamic motion blurring.',
+    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
+    poster: 'https://picsum.photos/seed/TypographyZ/1024/768'
+  },
+  {
+    id: 7,
+    title: 'Rigged Worlds',
+    category: '2D Animation',
+    type: 'Short Story',
+    mediaType: 'video',
+    description: 'Fluid puppet animations featuring complex 2D rigging and inverse kinematics for emotional character acting.',
+    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
+    poster: 'https://picsum.photos/seed/Rigged/1024/768'
+  },
+  {
+    id: 8,
+    title: 'Daily Hook',
+    category: 'Simple Shorts',
+    type: 'Vertical Video',
+    mediaType: 'image',
+    description: 'Retention-optimized vertical video edit, designed specifically for algorithmic reach on TikTok and Reels.',
+    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
+    poster: 'https://picsum.photos/seed/ShortsVertical/1024/768'
   }
 ];
 
+function PortfolioCard({ project, onClickImage }: { project: Project; onClickImage: (p: Project) => void }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current || isPlaying) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    const rotateX = ((y - centerY) / centerY) * -8;
+    const rotateY = ((x - centerX) / centerX) * 8;
+    
+    const percentX = (x / rect.width) * 100;
+    const percentY = (y / rect.height) * 100;
+    
+    cardRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    const glare = cardRef.current.querySelector('.glare-layer') as HTMLElement;
+    if (glare) {
+      glare.style.opacity = '1';
+      glare.style.background = `radial-gradient(circle at ${percentX}% ${percentY}%, rgba(255,255,255,0.15) 0%, transparent 50%)`;
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!cardRef.current) return;
+    cardRef.current.style.transform = `rotateX(0deg) rotateY(0deg)`;
+    const glare = cardRef.current.querySelector('.glare-layer') as HTMLElement;
+    if (glare) {
+      glare.style.opacity = '0';
+    }
+  };
+
+  const handleClick = () => {
+    if (project.mediaType === 'video') {
+      setIsPlaying(true);
+    } else {
+      onClickImage(project);
+    }
+  };
+
+  const categoryColor = CATEGORY_COLORS[project.category] || '#FF008A';
+
+  return (
+    <div style={{ perspective: '800px' }} className="h-full">
+      <style>{`
+        .play-overlay { transform: scale(1); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .group:hover .play-overlay { transform: scale(1.15); }
+      `}</style>
+      <div 
+        ref={cardRef}
+        onClick={handleClick}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        className="group relative aspect-[4/5] md:aspect-auto md:h-[450px] overflow-hidden rounded-xl cursor-pointer border border-border/20 transition-transform duration-200 ease-out preserve-3d"
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        {isPlaying ? (
+          <video 
+            src={project.videoUrl} 
+            autoPlay 
+            muted 
+            loop 
+            playsInline
+            controls={false}
+            className="w-full h-full object-cover absolute inset-0 z-0" 
+          />
+        ) : (
+          <img 
+            src={project.poster}
+            alt={project.title}
+            className="w-full h-full object-cover absolute inset-0 z-0 transition-transform duration-700 ease-out group-hover:scale-[1.06]" 
+            referrerPolicy="no-referrer"
+          />
+        )}
+
+        {!isPlaying && (
+          <>
+            <div className="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
+            <div className="glare-layer absolute inset-0 z-20 opacity-0 pointer-events-none transition-opacity duration-300 mix-blend-overlay" />
+
+            {project.mediaType === 'video' && (
+              <>
+                <div className="absolute top-3 right-3 z-30 bg-black/60 backdrop-blur-md px-2 py-1 flex items-center gap-1.5 rounded-md border border-white/10 shadow-sm">
+                   <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[6px] border-l-white border-b-[4px] border-b-transparent ml-0.5"></div>
+                   <span className="text-[10px] uppercase font-bold tracking-wider text-white">Video</span>
+                </div>
+                
+                <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                  <div className="play-overlay w-[60px] h-[60px] rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center border border-white/10 shadow-lg">
+                    <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[14px] border-l-white border-b-[8px] border-b-transparent ml-1"></div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="absolute top-3 left-3 z-30 bg-black/70 backdrop-blur-xl px-3 py-1.5 rounded-md shadow-sm border border-white/10" style={{ borderLeftWidth: '4px', borderLeftColor: categoryColor }}>
+               <span className="text-[10px] uppercase font-bold tracking-wider text-white border-0">{project.category}</span>
+            </div>
+
+            <div className="absolute bottom-5 left-5 right-5 z-30 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
+               <h3 className="text-3xl md:text-3xl font-normal text-white tracking-tight mb-2 drop-shadow-md" style={{ fontFamily: 'var(--font-display)' }}>{project.title}</h3>
+               <div className="flex justify-between items-center text-xs text-white/80 font-medium">
+                  <span className="tracking-wide uppercase">{project.mediaType === 'video' ? 'Click to Play' : 'View Gallery'}</span>
+                  <span className="font-sans flex items-center gap-1 drop-shadow-md pb-0.5 border-b border-white/30">View <ArrowUpRight size={14} /></span>
+               </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TestimonialCarousel() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDown, setIsDown] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const testimonials = [
+    { id: 1, image: 'https://placehold.co/800x480/white/000000?text=Customer+Screenshot+1&font=Inter' },
+    { id: 2, image: 'https://placehold.co/800x480/white/000000?text=Customer+Screenshot+2&font=Inter' },
+    { id: 3, image: 'https://placehold.co/800x480/white/000000?text=Customer+Screenshot+3&font=Inter' },
+    { id: 4, image: 'https://placehold.co/800x480/white/000000?text=Customer+Screenshot+4&font=Inter' },
+    { id: 5, image: 'https://placehold.co/800x480/white/000000?text=Customer+Screenshot+5&font=Inter' },
+  ];
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (!isPaused && scrollRef.current) {
+      interval = setInterval(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        
+        let cardWidth = 0;
+        if (window.innerWidth >= 768) {
+           cardWidth = el.clientWidth / 2.2;
+        } else {
+           cardWidth = el.clientWidth / 1.1;
+        }
+        
+        let nextScroll = el.scrollLeft + cardWidth;
+        const maxScroll = el.scrollWidth - el.clientWidth;
+        
+        if (nextScroll >= maxScroll - 10) {
+           nextScroll = 0;
+        }
+        
+        el.scrollTo({ left: nextScroll, behavior: 'smooth' });
+      }, 5000);
+    }
+    return () => clearInterval(interval);
+  }, [isPaused]);
+
+  // Handle active dot update based on scroll position
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const el = scrollRef.current;
+    
+    let cardWidth = window.innerWidth >= 768 ? el.clientWidth / 2.2 : el.clientWidth / 1.1;
+    const scrollPos = el.scrollLeft + (cardWidth / 2);
+    const index = Math.min(Math.floor(scrollPos / cardWidth), testimonials.length - 1);
+    setActiveIndex(index);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDown(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+  
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!scrollRef.current) return;
+    setIsDown(true);
+    setStartX(e.touches[0].pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+
+  const handleDragEnd = () => {
+    setIsDown(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDown || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2; 
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDown || !scrollRef.current) return;
+    const x = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2; 
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const scrollByAmount = (direction: number) => {
+     if(scrollRef.current) {
+        const amount = window.innerWidth >= 768 ? scrollRef.current.clientWidth / 2.2 : scrollRef.current.clientWidth / 1.1;
+        scrollRef.current.scrollBy({ left: amount * direction, behavior: 'smooth' });
+     }
+  };
+
+  return (
+    <div 
+      className="w-full mt-32 mb-16 text-left reveal-target reveal-slide-up relative"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      <style>{`
+        .carousel-track::-webkit-scrollbar { display: none; }
+        .carousel-track { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fillBar {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
+        .animate-fill-bar {
+           transform-origin: left;
+           animation: fillBar 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
+      
+      {/* Header Container */}
+      <div className="max-w-7xl mx-auto px-6 md:px-16 mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-border/20 pb-8">
+        <div>
+           <h3 className="text-4xl md:text-5xl font-normal text-foreground leading-tight tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+             What Our Clients Say
+           </h3>
+        </div>
+        
+        <div className="flex flex-col items-start md:items-end gap-3 reveal-target reveal-slide-left">
+           <div className="flex items-center gap-3">
+             <span className="text-4xl font-bold tracking-tight text-foreground" style={{ fontFamily: 'var(--font-display)' }}>5.0</span>
+             <div className="flex items-center gap-1">
+               {[...Array(5)].map((_, i) => (
+                 <Star key={i} size={18} className="fill-[#FF008A] text-[#FF008A]" />
+               ))}
+             </div>
+           </div>
+           
+           <div className="flex items-center gap-3">
+             <div className="flex flex-col gap-1.5 w-[100px]">
+                <div className="h-1 bg-border/40 rounded-full w-full overflow-hidden">
+                   <div className="h-full bg-[#FF008A] rounded-full animate-fill-bar" style={{ width: '100%', animationDelay: '0.2s' }}></div>
+                </div>
+                <div className="h-1 bg-border/40 rounded-full w-full overflow-hidden">
+                   <div className="h-full bg-[#FF008A] rounded-full animate-fill-bar" style={{ width: '92%', animationDelay: '0.4s' }}></div>
+                </div>
+                <div className="h-1 bg-border/40 rounded-full w-full overflow-hidden">
+                   <div className="h-full bg-[#FF008A] rounded-full animate-fill-bar" style={{ width: '95%', animationDelay: '0.6s' }}></div>
+                </div>
+             </div>
+             <div className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-medium leading-none mt-0.5">Reliability Score</div>
+           </div>
+        </div>
+      </div>
+      
+      {/* Swipe Track */}
+      <div className="relative max-w-7xl mx-auto pl-6 md:pl-16 pr-6 md:pr-0">
+        <div 
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="carousel-track flex gap-4 md:gap-6 overflow-x-auto pb-4 pt-2 snap-x snap-mandatory select-none cursor-grab active:cursor-grabbing"
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleDragEnd}
+          onMouseUp={handleDragEnd}
+          onMouseMove={handleMouseMove}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleDragEnd}
+          onTouchMove={handleTouchMove}
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          {testimonials.map((t) => (
+             <div 
+               key={t.id} 
+               className="flex-shrink-0 w-[calc(100%/1.1)] md:w-[calc(100%/2.2)] snap-start md:snap-center bg-white border border-[#e0e0e0] rounded-[12px] p-2 md:p-4 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] transition-shadow duration-300 h-[280px] md:h-[340px] flex items-center justify-center relative overflow-hidden"
+             >
+                <img src={t.image} alt="Client Review Screenshot" className="w-full h-full object-contain pointer-events-none" />
+             </div>
+          ))}
+        </div>
+
+        {/* Carousel Controls */}
+        <div className="flex justify-between items-center pr-6 md:pr-16 mt-6 md:mt-8">
+           {/* Dots */}
+           <div className="flex items-center gap-2.5">
+             {testimonials.map((_, i) => (
+               <div 
+                 key={i} 
+                 className={`h-2 rounded-full transition-all duration-300 ${activeIndex === i ? 'w-6 bg-[#FF008A]' : 'w-2 bg-border/80'}`}
+               ></div>
+             ))}
+           </div>
+           
+           {/* Navigation Arrows */}
+           <div className="flex gap-2 md:gap-3">
+             <button aria-label="Previous testimonial" onClick={() => scrollByAmount(-1)} className="p-3 rounded-full border border-border/60 text-foreground/80 hover:text-foreground hover:bg-black/5 hover:border-black/20 transition-all flex items-center justify-center bg-transparent cursor-pointer">
+               <ChevronLeft size={18} strokeWidth={2.5} />
+             </button>
+             <button aria-label="Next testimonial" onClick={() => scrollByAmount(1)} className="p-3 rounded-full border border-border/60 text-foreground/80 hover:text-foreground hover:bg-black/5 hover:border-black/20 transition-all flex items-center justify-center bg-transparent cursor-pointer">
+               <ChevronRight size={18} strokeWidth={2.5} />
+             </button>
+           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PageLoader() {
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+  return (
+    <div className={`page-loader ${!visible ? 'fade-out' : ''}`}>
+      <span className="text-white text-2xl font-bold tracking-widest animate-pulse">pulse.</span>
+    </div>
+  );
+}
+
+function ScrollProgressBar() {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrolled = window.scrollY;
+      const height = document.documentElement.scrollHeight - window.innerHeight;
+      setWidth((scrolled / height) * 100);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  return <div className="scroll-progress" style={{ width: `${width}%` }} />;
+}
+
+function BackToTopButton() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => setVisible(window.scrollY > 400);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  return (
+    <button 
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      className={`back-to-top bg-gray-200/60 backdrop-blur-2xl backdrop-saturate-[1.8] border border-white/20 text-foreground p-3 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:bg-gray-200/70 transition-all duration-300 ${visible ? 'visible' : ''}`}
+      aria-label="Back to top"
+    >
+      <ArrowUp size={20} />
+    </button>
+  );
+}
+
+function SectionDivider() {
+  return (
+    <div className="w-full h-24 overflow-hidden pointer-events-none">
+       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full fill-background">
+         <path d="M0,0 C25,100 75,100 100,0 L100,100 L0,100 Z" />
+       </svg>
+    </div>
+  );
+}
+
 export default function App() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+
+  // Filtering System State
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [visibleCount, setVisibleCount] = useState(6);
+  const [animatingCards, setAnimatingCards] = useState(false);
+  const [displayProjects, setDisplayProjects] = useState<Project[]>(projects.slice(0, 6));
+
+  useScrollReveal();
+
+  const handleCategoryClick = (cat: string) => {
+    if (cat === activeCategory) return;
+    setAnimatingCards(true);
+    setTimeout(() => {
+      setActiveCategory(cat);
+      const newFiltered = projects.filter(p => cat === 'All' || p.category === cat);
+      setVisibleCount(6);
+      setDisplayProjects(newFiltered.slice(0, 6));
+      setAnimatingCards(false);
+    }, 150);
+  };
+
+  const handleLoadMore = () => {
+    const newCount = visibleCount + 6;
+    const newFiltered = projects.filter(p => activeCategory === 'All' || p.category === activeCategory);
+    setVisibleCount(newCount);
+    setDisplayProjects(newFiltered.slice(0, newCount));
+  };
+  
+  const currentTotal = projects.filter(p => activeCategory === 'All' || p.category === activeCategory).length;
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -86,6 +818,9 @@ export default function App() {
 
   return (
     <div className="bg-background min-h-screen text-foreground overflow-x-hidden selection:bg-foreground selection:text-background font-sans">
+      <PageLoader />
+      <ScrollProgressBar />
+      <BackToTopButton />
       
       {/* Project Modal (AnimatePresence allows graceful unmounting) */}
       <AnimatePresence>
@@ -163,21 +898,32 @@ export default function App() {
         
         {/* 2. Brand Color Wash (subtle pink/magenta tint to tie the video into the website) */}
         <div className="absolute inset-0 opacity-[0.15] mix-blend-color bg-gradient-to-br from-[#FF2DF5] via-[#FF008A] to-[#FF0030] pointer-events-none" />
+
+        {/* 3. Film Grain Overlay (Animated SVG Turbulence) */}
+        <div className="absolute inset-0 z-20 pointer-events-none opacity-[0.06] mix-blend-overlay">
+          <svg width="100%" height="100%">
+            <filter id="noise">
+              <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch">
+                <animate attributeName="baseFrequency" values="0.65; 0.7; 0.65" keyTimes="0; 0.5; 1" dur="0.2s" repeatCount="indefinite" />
+              </feTurbulence>
+            </filter>
+            <rect width="100%" height="100%" filter="url(#noise)" />
+          </svg>
+        </div>
       </div>
 
-      <header className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex flex-row items-center justify-between px-4 py-3 w-[90%] max-w-5xl bg-white/20 backdrop-blur-lg backdrop-saturate-[1.2] border border-white/20 rounded-2xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.06)] transition-all duration-500 hover:bg-white/30">
-        <div className="pl-2 text-[17px] font-semibold text-black/90 tracking-tight" style={{ fontFamily: 'var(--font-body)' }}>
+      <header className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex flex-row items-center justify-between px-3 py-2 w-[95%] max-w-5xl bg-gray-200/55 backdrop-blur-2xl backdrop-saturate-[1.8] border border-white/20 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:bg-gray-200/65 transition-all duration-500">
+        <div className="pl-3 text-[17px] font-semibold text-black/90 tracking-tight" style={{ fontFamily: 'var(--font-body)' }}>
           Pulse
         </div>
         <nav className="hidden md:flex flex-row items-center gap-1">
-          <a href="#about" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl hover:bg-white/40 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>About</a>
-          <a href="#projects" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl hover:bg-white/40 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>Works</a>
-          <a href="#services" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl hover:bg-white/40 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>Services</a>
-          <a href="#testimonial" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl hover:bg-white/40 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>Testimonials</a>
+          <a href="#about" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>About</a>
+          <a href="#projects" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>Works</a>
+          <a href="#testimonial" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>Testimonials</a>
         </nav>
-        <a href="#testimonial" className="bg-black/90 text-white rounded-xl flex flex-row items-center pl-4 pr-1.5 py-1.5 gap-2.5 text-[13px] font-medium hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 inline-flex shadow-[0_4px_12px_rgba(0,0,0,0.1)]" style={{ fontFamily: 'var(--font-body)' }}>
+        <a href="https://calendly.com/reachresolve89/schedule-a-meeting-with-us" target="_blank" rel="noopener noreferrer" className="bg-black text-white rounded-xl flex flex-row items-center pl-4 pr-1.5 py-1.5 gap-2 text-[13px] font-medium hover:bg-black/80 transition-all duration-300 inline-flex" style={{ fontFamily: 'var(--font-body)' }}>
           Book Meeting
-          <div className="bg-white/20 rounded-lg p-1.5 flex items-center justify-center">
+          <div className="bg-white/10 rounded-lg p-1.5 flex items-center justify-center">
             <ArrowUpRight size={14} className="text-white" />
           </div>
         </a>
@@ -185,12 +931,21 @@ export default function App() {
       
       <main>
         <section id="home" className="relative z-10 flex flex-col items-center justify-center text-center px-6 pt-32 pb-40 min-h-[90vh]">
-          <div className="flex flex-col items-center justify-center animate-fade-rise">
+          <div className="flex flex-col items-center justify-center">
             <h1 style={{ fontFamily: 'var(--font-body)' }} className="text-4xl md:text-6xl font-medium tracking-tight text-white leading-none mb-2 drop-shadow-md">
-              The editor that makes your
+              {"The editor that makes your".split(" ").map((word, i) => (
+                <span 
+                  key={i} 
+                  className="inline-block opacity-0 animate-word-reveal" 
+                  style={{ animationDelay: `${i * 80}ms` }}
+                >
+                  {word}&nbsp;
+                </span>
+              ))}
             </h1>
-            <h2 style={{ fontFamily: 'var(--font-display)' }} className="text-6xl md:text-[80px] italic text-white leading-none drop-shadow-md">
-              videos & reels <span className="bg-gradient-to-r from-[#FF2DF5] via-[#FF008A] to-[#FF0030] text-transparent bg-clip-text font-normal">viral</span>
+            <h2 style={{ fontFamily: 'var(--font-display)', animationDelay: '400ms' }} className="text-6xl md:text-[80px] italic text-white leading-none drop-shadow-md opacity-0 animate-word-reveal">
+              <span className="text-glitch" data-text="videos & reels">videos & reels</span>{' '}
+              <span className="bg-gradient-to-r from-[#FF2DF5] via-[#FF008A] to-[#FF0030] text-transparent bg-clip-text font-normal">viral</span>
             </h2>
           </div>
           
@@ -198,116 +953,184 @@ export default function App() {
             Premium short-form video editing for Influencers, Creators, and Brands
           </p>
           
-          <a href="#projects" style={{ fontFamily: 'var(--font-body)' }} className="animate-fade-rise-delay-2 mt-12 bg-white text-black rounded-full pl-4 pr-8 py-3 flex items-center gap-4 text-base font-semibold hover:scale-105 transition-transform cursor-pointer inline-flex">
+          <MagneticButton href="#projects" style={{ fontFamily: 'var(--font-body)' }} className="animate-fade-rise-delay-2 mt-12 bg-white text-black rounded-full pl-4 pr-8 py-3 flex items-center gap-4 text-base font-semibold transition-colors cursor-pointer inline-flex shadow-[0_4px_24px_rgba(255,255,255,0.15)] hover:shadow-[0_8px_32px_rgba(255,255,255,0.25)]">
             <div className="bg-gradient-to-br from-[#FF2DF5] via-[#FF008A] to-[#FF0030] rounded-full p-2.5 flex items-center justify-center">
               <Play size={18} className="text-white fill-white ml-0.5" />
             </div>
             See My Showreel
-          </a>
+          </MagneticButton>
         </section>
+        <SectionDivider />
 
-        <section id="projects" className="relative z-10 w-full py-32 bg-transparent">
-          <div className="max-w-7xl mx-auto px-8 md:px-16">
-            <FadeIn className="flex flex-col md:flex-row justify-between items-center md:items-end text-center md:text-left mb-16 gap-4 border-b border-border/50 pb-8">
-              <h2 className="text-5xl md:text-6xl tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Selected Works</h2>
-              <p className="text-muted-foreground max-w-sm text-sm uppercase tracking-widest font-medium">A collection of movement & sound.</p>
-            </FadeIn>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-x-12 md:gap-y-16">
-              {projects.map((project, index) => (
-                <FadeIn key={project.id} delay={index * 0.1}>
-                  <div 
-                    onClick={() => setSelectedProject(project)}
-                    className="group relative aspect-[16/9] bg-muted overflow-hidden rounded-xl cursor-pointer border border-border/20 mb-6"
-                  >
-                    <div className="absolute inset-0 bg-background/20 group-hover:bg-transparent transition-colors duration-500 z-10" />
-                    
-                    {/* Hover video overlay effect logic could go here, for now using image scale */}
-                    <img 
-                      src={project.poster}
-                      alt={project.title}
-                      className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-700 ease-out" 
-                      referrerPolicy="no-referrer"
-                    />
-                    
-                    {/* Play button icon overlay */}
-                    <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                       <div className="w-16 h-16 rounded-full liquid-glass flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform duration-500">
-                          <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-foreground border-b-[6px] border-b-transparent ml-1"></div>
-                       </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-start pt-2">
-                    <div>
-                      <h3 className="text-3xl font-normal text-foreground tracking-tight mb-2" style={{ fontFamily: 'var(--font-display)' }}>{project.title}</h3>
-                      <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed max-w-sm">{project.description}</p>
-                    </div>
-                    <span className="text-xs uppercase tracking-widest text-muted-foreground border border-border/50 px-2 py-1 rounded-md">{project.type}</span>
-                  </div>
-                </FadeIn>
+        <section id="stats" className="relative z-10 w-full py-24 bg-transparent overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,0,138,0.03)_0%,transparent_50%)] pointer-events-none" />
+          
+          <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle, var(--color-foreground) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+
+          <div className="max-w-7xl mx-auto px-6 md:px-16 relative z-10">
+            <div className="text-center mb-16 reveal-target reveal-slide-up">
+              <h3 className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold inline-block border border-border/20 px-4 py-1.5 rounded-full bg-black/5 backdrop-blur-sm">By The Numbers</h3>
+            </div>
+
+            {/* Row 1: Big platform stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-4 mb-20 relative">
+              <div className="hidden lg:block absolute left-1/4 top-0 bottom-0 w-[1px] bg-border/20"></div>
+              <div className="hidden lg:block absolute left-2/4 top-0 bottom-0 w-[1px] bg-border/20"></div>
+              <div className="hidden lg:block absolute left-3/4 top-0 bottom-0 w-[1px] bg-border/20"></div>
+              
+              <div className="text-center flex flex-col items-center justify-center py-4 reveal-target reveal-slide-up" style={{ transitionDelay: '0ms' }}>
+                <div className="text-[clamp(2.8rem,6vw,5rem)] font-bold text-[#FF008A] mb-2 leading-none" style={{ fontFamily: 'var(--font-display)' }}>
+                  <ScrollCounter value={47} suffix="M+" />
+                </div>
+                <div className="text-[0.75rem] uppercase tracking-[0.15em] text-muted-foreground font-medium">Total Views</div>
+              </div>
+              
+              <div className="text-center flex flex-col items-center justify-center py-4 reveal-target reveal-slide-up" style={{ transitionDelay: '100ms' }}>
+                <div className="text-[clamp(2.8rem,6vw,5rem)] font-bold text-[#FF008A] mb-2 leading-none" style={{ fontFamily: 'var(--font-display)' }}>
+                  <ScrollCounter value={120} suffix="K+" />
+                </div>
+                <div className="text-[0.75rem] uppercase tracking-[0.15em] text-muted-foreground font-medium">Subscribers Helped Grow</div>
+              </div>
+
+              <div className="text-center flex flex-col items-center justify-center py-4 reveal-target reveal-slide-up" style={{ transitionDelay: '200ms' }}>
+                <div className="text-[clamp(2.8rem,6vw,5rem)] font-bold text-[#FF008A] mb-2 leading-none" style={{ fontFamily: 'var(--font-display)' }}>
+                  <ScrollCounter value={200} suffix="+" />
+                </div>
+                <div className="text-[0.75rem] uppercase tracking-[0.15em] text-muted-foreground font-medium">Videos Edited</div>
+              </div>
+
+              <div className="text-center flex flex-col items-center justify-center py-4 reveal-target reveal-slide-up" style={{ transitionDelay: '300ms' }}>
+                <div className="text-[clamp(2.8rem,6vw,5rem)] font-bold text-[#FF008A] mb-2 leading-none" style={{ fontFamily: 'var(--font-display)' }}>
+                  <ScrollCounter value={82} suffix="%" />
+                </div>
+                <div className="text-[0.75rem] uppercase tracking-[0.15em] text-muted-foreground font-medium">Avg Retention Rate</div>
+              </div>
+            </div>
+
+            {/* Row 2: Trust signals */}
+            <div className="flex flex-wrap justify-center items-center gap-4 reveal-target reveal-slide-up" style={{ transitionDelay: '400ms' }}>
+              {[
+                { text: "⚡ 3-Day Avg Delivery" },
+                { text: "🔁 Unlimited Revisions" },
+                { text: "🎯 Retention-First Editing" },
+                { text: "🌍 Worked with Creators in 6 Countries" }
+              ].map((badge, i) => (
+                <div key={i} className="group flex items-center justify-center gap-2 bg-background border border-border/40 text-foreground/80 hover:text-foreground hover:border-[#FF008A] px-4 py-2 rounded-full transition-all duration-300 hover:shadow-[0_0_12px_rgba(255,0,138,0.15)] cursor-default">
+                  <span className="text-[13px] font-medium whitespace-nowrap">{badge.text}</span>
+                </div>
               ))}
             </div>
           </div>
         </section>
+        <SectionDivider />
+
+        <section id="projects" className="relative z-10 w-full py-32 bg-transparent">
+          <style>{`
+            .grid-container {
+               column-count: 1;
+               column-gap: 2rem;
+            }
+            @media (min-width: 768px) {
+               .grid-container {
+                 column-count: 2;
+               }
+            }
+            .filter-scrollbar::-webkit-scrollbar {
+              display: none;
+            }
+            .filter-scrollbar {
+              -ms-overflow-style: none;  
+              scrollbar-width: none;  
+              -webkit-overflow-scrolling: touch;
+            }
+          `}</style>
+          <div className="max-w-7xl mx-auto px-6 md:px-16">
+            <div className="reveal-target reveal-slide-left flex flex-col md:flex-row justify-between items-center md:items-end text-center md:text-left mb-12 gap-4 border-b border-border/50 pb-8">
+              <h2 className="text-5xl md:text-6xl tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Selected Works</h2>
+              <p className="text-muted-foreground max-w-sm text-sm uppercase tracking-widest font-medium">A collection of movement & sound.</p>
+            </div>
+            
+            {/* Filter Bar */}
+            <div className="flex flex-wrap lg:flex-nowrap justify-center gap-2 lg:gap-1.5 xl:gap-2 pb-4 mb-10 w-full reveal-target reveal-slide-up">
+              {FILTER_CATEGORIES.map((cat, i) => {
+                 const isActive = activeCategory === cat;
+
+                 return (
+                   <button
+                     key={i}
+                     onClick={() => handleCategoryClick(cat)}
+                     className={`px-4 py-2.5 md:px-5 md:py-2.5 lg:px-3 xl:px-4 rounded-full text-[10px] md:text-[11px] font-semibold leading-none uppercase tracking-wider md:tracking-widest lg:tracking-wider transition-all duration-300 flex-shrink-0 cursor-pointer whitespace-nowrap ${
+                       isActive 
+                         ? 'bg-[#FF008A] text-white shadow-[0_0_15px_rgba(255,0,138,0.4)] border border-[#FF008A]' 
+                         : 'bg-transparent text-foreground/70 border border-border/60 hover:border-foreground/40 hover:text-foreground'
+                     }`}
+                   >
+                     {cat}
+                   </button>
+                 );
+              })}
+            </div>
+
+            {/* Masonry Grid */}
+            <div className={`grid-container w-full transition-all duration-150 ease-out ${animatingCards ? 'opacity-0 scale-[0.95]' : 'opacity-100 scale-100'}`}>
+              {displayProjects.map((project, index) => (
+                <div key={`${project.id}`} className="break-inside-avoid mb-8">
+                  <PortfolioCard project={project} onClickImage={setSelectedProject} />
+                </div>
+              ))}
+              {displayProjects.length === 0 && (
+                <div className="py-20 text-center w-full col-span-full">
+                  <p className="text-muted-foreground/60 tracking-widest uppercase text-sm">No items matching your criteria.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Load More Pagination */}
+            {visibleCount < currentTotal && (
+              <div className="w-full flex justify-center mt-6">
+                 <button onClick={handleLoadMore} className="bg-transparent text-foreground border border-border/60 rounded-full px-6 py-3 text-xs uppercase font-medium tracking-widest hover:bg-foreground hover:text-background transition-colors cursor-pointer">
+                   Load More
+                 </button>
+              </div>
+            )}
+          </div>
+        </section>
+        <SectionDivider />
 
         <section id="about" className="relative z-10 w-full py-40 border-y border-border/40 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-black/5 to-background">
-          <FadeIn className="max-w-4xl mx-auto px-8 text-center flex flex-col items-center">
-             <h2 className="text-5xl md:text-6xl tracking-tight mb-8 text-foreground" style={{ fontFamily: 'var(--font-display)' }}>I shape the narrative.</h2>
-             <p className="text-muted-foreground text-lg md:text-xl leading-relaxed font-sans mb-12 max-w-2xl">
+          <div className="max-w-4xl mx-auto px-8 text-center flex flex-col items-center">
+             <h2 className="text-5xl md:text-[5.5rem] font-normal tracking-tight mb-8 text-foreground leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+               {"I shape the narrative.".split(" ").map((word, i, arr) => (
+                 <span key={i} className="inline-block reveal-target reveal-slide-up" style={{ transitionDelay: `${i * 100}ms` }}>
+                   {word}{i !== arr.length - 1 && '\u00A0'}
+                 </span>
+               ))}
+             </h2>
+             <p className="reveal-target reveal-slide-up text-muted-foreground text-lg md:text-xl leading-relaxed font-sans mb-12 max-w-2xl px-4" style={{ transitionDelay: '300ms' }}>
                I am a specialized freelance video editor focusing on high-retention cuts, dynamic color grading, and immersive soundscapes. With a deep understanding of platform algorithms, I transform raw footage into highly engaging content that grabs attention.
              </p>
-             <button className="px-8 py-4 text-xs font-medium uppercase tracking-[0.1em] border border-border/50 hover:bg-foreground hover:text-background transition-colors duration-300 rounded-full cursor-pointer">
-               My Process
-             </button>
+             
+             <ProcessTimeline />
+             
+             <TestimonialCarousel />
 
-             {/* THEMATIC INFOGRAPHIC: EDITING TIMELINE */}
-             <div className="w-full max-w-3xl mx-auto mt-20 md:mt-28 mb-4 w-[90%] md:w-full">
-               <div className="relative w-full h-[120px] rounded-xl border border-border/50 bg-white/40 overflow-hidden flex flex-col pt-5 px-4 md:px-6 shadow-sm">
-                 <div className="flex items-center text-[10px] uppercase tracking-widest text-muted-foreground font-mono mb-2">
-                   <span className="w-8 md:w-12 text-left flex-shrink-0">V1</span>
-                   <div className="flex-1 border-l border-border/50 pl-2 md:pl-3 flex gap-1 md:gap-1.5 h-8 items-center">
-                     <div className="h-full bg-black/5 rounded-md w-[25%] border border-black/5" />
-                     <div className="h-full bg-gradient-to-r from-[#FF2DF5]/10 to-[#FF008A]/20 rounded-md w-[45%] border border-[#FF008A]/30 relative overflow-hidden">
-                       <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 0, transparent 50%)", backgroundSize: "10px 10px" }} />
-                     </div>
-                     <div className="h-full bg-black/5 rounded-md w-[30%] border border-black/5" />
-                   </div>
-                 </div>
-                 <div className="flex items-center text-[10px] uppercase tracking-widest text-muted-foreground font-mono mb-2">
-                   <span className="w-8 md:w-12 text-left flex-shrink-0">A1</span>
-                   <div className="flex-1 border-l border-border/50 pl-2 md:pl-3 flex gap-1 md:gap-1.5 h-8 items-center">
-                     <div className="h-full bg-transparent rounded-md w-[100%] border border-black/5 flex items-center justify-center px-1 overflow-hidden relative">
-                        <svg width="100%" height="80%" preserveAspectRatio="none" viewBox="0 0 100 24" className="opacity-30 text-black">
-                           <path d="M0,12 L5,5 L10,19 L15,12 L20,8 L25,16 L30,12 L35,6 L40,18 L45,12 L50,9 L55,15 L60,12 L65,4 L70,20 L75,12 L80,7 L85,17 L90,12 L95,10 L100,12" stroke="currentColor" fill="none" strokeWidth="1" strokeLinejoin="round"/>
-                        </svg>
-                     </div>
-                   </div>
-                 </div>
-                 {/* Playhead */}
-                 <motion.div 
-                   className="absolute bottom-0 w-[1px] h-[85%] bg-[#FF008A] z-10 shadow-[0_0_10px_rgba(255,0,138,0.5)]"
-                   animate={{ left: ["15%", "85%"] }}
-                   transition={{ duration: 4, repeat: Infinity, ease: "linear", repeatType: "loop" }}
-                 >
-                   <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-2.5 h-3.5 rounded-sm bg-[#FF008A] shadow-md" />
-                 </motion.div>
-               </div>
-               <div className="flex justify-between text-[9px] text-muted-foreground mt-4 px-2 tracking-[0.15em] uppercase font-mono relative opacity-70">
-                  <span>00:00:00:00</span>
-                  <span className="hidden sm:block absolute left-1/2 -translate-x-1/2">Timeline Sequence</span>
-                  <span>00:01:30:00</span>
-               </div>
+             {/* ANIMATED WAVEFORM VISUALIZER */}
+             <div className="reveal-target reveal-scale-up w-full max-w-3xl mx-auto mt-24 md:mt-32 mb-8 w-[90%] md:w-full" style={{ transitionDelay: '500ms' }}>
+               <AnimatedWaveform />
+               <p className="text-center text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-mono mt-8 opacity-70">
+                 Every frame, shaped with intention.
+               </p>
              </div>
 
-          </FadeIn>
+          </div>
         </section>
 
-        <footer id="testimonial" className="relative z-10 w-full bg-background pt-32 pb-12 px-8 md:px-16">
+        <footer id="testimonial" className="relative z-10 w-full bg-background pt-32 pb-12 px-8 md:px-16 overflow-hidden">
           <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start gap-20">
             
-            <FadeIn className="w-full lg:w-1/2">
+            <div className="w-full lg:w-1/2 reveal-target reveal-slide-up">
               <h2 className="text-6xl md:text-[64px] mb-6 leading-none tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Let's work<br/>together.</h2>
+
               <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-sm">Ready to bring your vision to life? Fill out the form or reach out directly.</p>
               <a href="mailto:hello@pulse.studio" className="text-base text-foreground underline decoration-border hover:decoration-foreground underline-offset-4 transition-colors font-medium">hello@pulse.studio</a>
 
@@ -361,9 +1184,9 @@ export default function App() {
                   </div>
                 </button>
               </form>
-            </FadeIn>
+            </div>
             
-            <FadeIn delay={0.2} className="grid grid-cols-2 gap-16 lg:gap-24 text-sm w-full lg:w-auto">
+            <div className="reveal-target reveal-slide-up grid grid-cols-2 gap-16 lg:gap-24 text-sm w-full lg:w-auto" style={{ transitionDelay: '200ms' }}>
               <div className="flex flex-col gap-6">
                 <span className="text-foreground uppercase tracking-widest text-[11px] font-semibold mb-2">Socials</span>
                 <a href="#" className="hover:text-foreground text-muted-foreground transition-colors">Instagram</a>
@@ -377,13 +1200,13 @@ export default function App() {
                 <a href="#" className="hover:text-foreground text-muted-foreground transition-colors">Terms of Service</a>
                 <a href="#" className="hover:text-foreground text-muted-foreground transition-colors">Cookie Usage</a>
               </div>
-            </FadeIn>
+            </div>
           </div>
 
-          <FadeIn delay={0.3} className="max-w-7xl mx-auto mt-32 pt-8 border-t border-border/30 flex flex-col md:flex-row justify-between items-center text-[11px] uppercase tracking-widest text-muted-foreground gap-4">
+          <div className="reveal-target reveal-slide-up max-w-7xl mx-auto mt-32 pt-8 border-t border-border/30 flex flex-col md:flex-row justify-between items-center text-[11px] uppercase tracking-widest text-muted-foreground gap-4" style={{ transitionDelay: '300ms' }}>
             <p>&copy; 2026 Pulse Studio. All rights reserved.</p>
             <p>Designed with Intent</p>
-          </FadeIn>
+          </div>
         </footer>
       </main>
     </div>
