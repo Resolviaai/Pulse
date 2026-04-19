@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://pulse.studio/sitemap.xml
+Sitemap: https://pulse-edit.netlify.app/sitemap.xml

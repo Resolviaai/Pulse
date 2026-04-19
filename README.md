@@ -41,7 +41,7 @@ The project includes foundational SEO assets for the homepage:
 - `public/sitemap.xml` publishes the production homepage URL
 - `metadata.json` now describes the Pulse Studio app correctly
 
-The canonical production URL is currently set to `https://pulse.studio/`. If the live domain changes, update the SEO files to match.
+The canonical production URL is currently set to `https://pulse-edit.netlify.app/`. If the live domain changes, update the SEO files to match.
 
 ## Project structure
 
