@@ -4,8 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, Play, ArrowUpRight, Inbox, Scissors, Palette, CheckCircle, Star, ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react';
+import { Play, ArrowUpRight, Inbox, Scissors, Palette, CheckCircle, Star, ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react';
 
 function useScrollReveal() {
   useEffect(() => {
@@ -300,7 +299,9 @@ const CATEGORY_COLORS: Record<string, string> = {
   'SaaS Animation': '#06b6d4',
   'AMV': '#e94dff',
   'Typography': '#eab308',
-  'Simple Shorts': '#ef4444'
+  'Simple Shorts': '#ef4444',
+  'Documentary': '#14b8a6',
+  'Promotional Ad': '#f43f5e'
 };
 
 const FILTER_CATEGORIES = ['All', ...Object.keys(CATEGORY_COLORS)];
@@ -310,101 +311,130 @@ interface Project {
   title: string;
   category: string;
   type: string;
-  mediaType: 'video' | 'image';
+  mediaType: 'video';
   description: string;
+  youtubeId: string;
   videoUrl: string;
   poster: string;
+}
+
+function getYouTubeEmbedUrl(youtubeId: string, mode: 'preview' | 'modal') {
+  const baseUrl = `https://www.youtube.com/embed/${youtubeId}`;
+
+  if (mode === 'preview') {
+    return `${baseUrl}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3`;
+  }
+
+  return `${baseUrl}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`;
 }
 
 const projects: Project[] = [
   {
     id: 1,
-    title: 'Echoes of Time',
-    category: 'Motion Graphics',
-    type: 'Short Film',
-    mediaType: 'image',
-    description: 'A nonlinear narrative exploring memory decay with dynamic motion graphics and typography, ensuring perfect visual flow.',
-    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
-    poster: 'https://picsum.photos/seed/Echoes/1024/768'
+    title: 'Typography edit',
+    category: 'Typography',
+    type: 'Typography Short',
+    mediaType: 'video',
+    description: 'Punchy type-led motion built for fast retention, crisp pacing, and high-scroll stopping power.',
+    youtubeId: 'tp6cVrtNaQM',
+    videoUrl: 'https://youtube.com/shorts/tp6cVrtNaQM',
+    poster: 'https://i.ytimg.com/vi/tp6cVrtNaQM/hqdefault.jpg'
   },
   {
     id: 2,
-    title: 'Neon Silence',
-    category: 'AMV',
-    type: 'Music Video',
+    title: 'cartoon animation',
+    category: '2D Animation',
+    type: 'Cartoon Animation',
     mediaType: 'video',
-    description: 'A high-energy, visually striking piece set to an electronic soundtrack. Emphasizes rhythm through precise frame-pacing.',
-    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
-    poster: 'https://picsum.photos/seed/Neon/1024/768'
+    description: 'Character-driven animation with playful timing, readable staging, and a clean short-form hook.',
+    youtubeId: '7xiSD9sFVPc',
+    videoUrl: 'https://youtube.com/shorts/7xiSD9sFVPc',
+    poster: 'https://i.ytimg.com/vi/7xiSD9sFVPc/hqdefault.jpg'
   },
   {
     id: 3,
-    title: 'Global Paths',
-    category: 'Map Animation',
-    type: 'Documentary',
+    title: 'documentary',
+    category: 'Documentary',
+    type: 'Documentary Edit',
     mediaType: 'video',
-    description: 'Intricate 3D map animations detailing historical trade routes with high precision terrain topology.',
-    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
-    poster: 'https://picsum.photos/seed/Map3/1024/768'
+    description: 'A documentary-style short shaped around clarity, mood, and narrative momentum in a compact runtime.',
+    youtubeId: 'pyaagZpUIE4',
+    videoUrl: 'https://youtube.com/shorts/pyaagZpUIE4',
+    poster: 'https://i.ytimg.com/vi/pyaagZpUIE4/hqdefault.jpg'
   },
   {
     id: 4,
-    title: 'The Explainers',
-    category: '2D Hoodie Guy Style',
-    type: 'YouTube Edutainment',
-    mediaType: 'image',
-    description: 'Classic YouTube edutainment animation utilizing the popular 2D avatar persona for high retention storytelling.',
-    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
-    poster: 'https://picsum.photos/seed/HoodieGuy/1024/768'
+    title: 'Aot AMV 4k',
+    category: 'AMV',
+    type: 'Anime Music Video',
+    mediaType: 'video',
+    description: 'High-energy anime edit work with sync-heavy pacing, sharp cuts, and cinematic impact.',
+    youtubeId: 'J2zRqtzjwLk',
+    videoUrl: 'https://youtube.com/shorts/J2zRqtzjwLk',
+    poster: 'https://i.ytimg.com/vi/J2zRqtzjwLk/hqdefault.jpg'
   },
   {
     id: 5,
-    title: 'B2B Flow',
-    category: 'SaaS Animation',
-    type: 'Commercial',
+    title: 'BMW edit 2k',
+    category: 'Motion Graphics',
+    type: 'Automotive Edit',
     mediaType: 'video',
-    description: 'Sleek, isometric UI/UX animations demonstrating the core value proposition of an enterprise data platform.',
-    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
-    poster: 'https://picsum.photos/seed/B2B/1024/768'
+    description: 'An automotive short focused on polish, speed, and premium visual rhythm for car content.',
+    youtubeId: 'j86KkVflx08',
+    videoUrl: 'https://youtube.com/shorts/j86KkVflx08',
+    poster: 'https://i.ytimg.com/vi/j86KkVflx08/hqdefault.jpg'
   },
   {
     id: 6,
-    title: 'Kinetic Words',
-    category: 'Typography',
-    type: 'Lyric Video',
+    title: 'Moolah promotional ad',
+    category: 'Promotional Ad',
+    type: 'Promo Ad',
     mediaType: 'video',
-    description: 'Fast-paced lyric video utilizing brutalist typography and dynamic motion blurring.',
-    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
-    poster: 'https://picsum.photos/seed/TypographyZ/1024/768'
+    description: 'A promotional ad cut built to sell quickly, highlight value fast, and keep the CTA front and center.',
+    youtubeId: '1DA9knqlZoA',
+    videoUrl: 'https://youtube.com/shorts/1DA9knqlZoA',
+    poster: 'https://i.ytimg.com/vi/1DA9knqlZoA/hqdefault.jpg'
   },
   {
     id: 7,
-    title: 'Rigged Worlds',
-    category: '2D Animation',
-    type: 'Short Story',
+    title: 'Results matters 2k',
+    category: 'Simple Shorts',
+    type: 'Results Short',
     mediaType: 'video',
-    description: 'Fluid puppet animations featuring complex 2D rigging and inverse kinematics for emotional character acting.',
-    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
-    poster: 'https://picsum.photos/seed/Rigged/1024/768'
+    description: 'A direct response-focused short that keeps the message lean, visual, and conversion-minded.',
+    youtubeId: 'opXh54yLjSk',
+    videoUrl: 'https://youtube.com/shorts/opXh54yLjSk',
+    poster: 'https://i.ytimg.com/vi/opXh54yLjSk/hqdefault.jpg'
   },
   {
     id: 8,
-    title: 'Daily Hook',
+    title: 'animated explainer shorts',
+    category: '2D Hoodie Guy Style',
+    type: 'Explainer Short',
+    mediaType: 'video',
+    description: 'An animated explainer short designed for fast education, clarity, and high audience retention.',
+    youtubeId: 'AttmmiJe9uc',
+    videoUrl: 'https://youtube.com/shorts/AttmmiJe9uc',
+    poster: 'https://i.ytimg.com/vi/AttmmiJe9uc/hqdefault.jpg'
+  },
+  {
+    id: 9,
+    title: 'How to justify your rates',
     category: 'Simple Shorts',
-    type: 'Vertical Video',
-    mediaType: 'image',
-    description: 'Retention-optimized vertical video edit, designed specifically for algorithmic reach on TikTok and Reels.',
-    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4',
-    poster: 'https://picsum.photos/seed/ShortsVertical/1024/768'
+    type: 'Educational Short',
+    mediaType: 'video',
+    description: 'A talking-point driven short built for authority, clarity, and repeat watch value.',
+    youtubeId: 'fAYGVCJ7jgM',
+    videoUrl: 'https://youtube.com/shorts/fAYGVCJ7jgM',
+    poster: 'https://i.ytimg.com/vi/fAYGVCJ7jgM/hqdefault.jpg'
   }
 ];
 
-function PortfolioCard({ project, onClickImage }: { project: Project; onClickImage: (p: Project) => void }) {
-  const [isPlaying, setIsPlaying] = useState(false);
+function PortfolioCard({ project }: { project: Project }) {
   const cardRef = useRef<HTMLDivElement>(null);
   
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current || isPlaying) return;
+    if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -435,14 +465,6 @@ function PortfolioCard({ project, onClickImage }: { project: Project; onClickIma
     }
   };
 
-  const handleClick = () => {
-    if (project.mediaType === 'video') {
-      setIsPlaying(true);
-    } else {
-      onClickImage(project);
-    }
-  };
-
   const categoryColor = CATEGORY_COLORS[project.category] || '#FF008A';
 
   return (
@@ -453,64 +475,47 @@ function PortfolioCard({ project, onClickImage }: { project: Project; onClickIma
       `}</style>
       <div 
         ref={cardRef}
-        onClick={handleClick}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="group relative aspect-[4/5] md:aspect-auto md:h-[450px] overflow-hidden rounded-xl cursor-pointer border border-border/20 transition-transform duration-200 ease-out preserve-3d"
+        className="group relative aspect-[9/16] md:h-[540px] overflow-hidden rounded-[28px] border border-border/20 transition-transform duration-200 ease-out preserve-3d bg-black"
         style={{ transformStyle: 'preserve-3d' }}
       >
-        {isPlaying ? (
-          <video 
-            src={project.videoUrl} 
-            autoPlay 
-            muted 
-            loop 
-            playsInline
-            controls={false}
-            className="w-full h-full object-cover absolute inset-0 z-0" 
-          />
-        ) : (
-          <img 
-            src={project.poster}
-            alt={project.title}
-            className="w-full h-full object-cover absolute inset-0 z-0 transition-transform duration-700 ease-out group-hover:scale-[1.06]" 
-            referrerPolicy="no-referrer"
-          />
-        )}
+        <iframe
+          src={getYouTubeEmbedUrl(project.youtubeId, 'preview')}
+          title={`${project.title} preview`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerPolicy="strict-origin-when-cross-origin"
+          loading="eager"
+          className="absolute inset-0 z-10 h-full w-full pointer-events-none"
+        />
 
-        {!isPlaying && (
-          <>
-            <div className="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
-            <div className="glare-layer absolute inset-0 z-20 opacity-0 pointer-events-none transition-opacity duration-300 mix-blend-overlay" />
+        <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+        <div className="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30" />
+        <div className="glare-layer absolute inset-0 z-40 opacity-0 pointer-events-none transition-opacity duration-300 mix-blend-overlay" />
 
-            {project.mediaType === 'video' && (
-              <>
-                <div className="absolute top-3 right-3 z-30 bg-black/60 backdrop-blur-md px-2 py-1 flex items-center gap-1.5 rounded-md border border-white/10 shadow-sm">
-                   <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[6px] border-l-white border-b-[4px] border-b-transparent ml-0.5"></div>
-                   <span className="text-[10px] uppercase font-bold tracking-wider text-white">Video</span>
-                </div>
-                
-                <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-                  <div className="play-overlay w-[60px] h-[60px] rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center border border-white/10 shadow-lg">
-                    <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[14px] border-l-white border-b-[8px] border-b-transparent ml-1"></div>
-                  </div>
-                </div>
-              </>
-            )}
+        <div className="absolute top-3 right-3 z-50 bg-black/60 backdrop-blur-md px-2 py-1 flex items-center gap-1.5 rounded-md border border-white/10 shadow-sm">
+           <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[6px] border-l-white border-b-[4px] border-b-transparent ml-0.5"></div>
+           <span className="text-[10px] uppercase font-bold tracking-wider text-white">Muted Autoplay</span>
+        </div>
 
-            <div className="absolute top-3 left-3 z-30 bg-black/70 backdrop-blur-xl px-3 py-1.5 rounded-md shadow-sm border border-white/10" style={{ borderLeftWidth: '4px', borderLeftColor: categoryColor }}>
-               <span className="text-[10px] uppercase font-bold tracking-wider text-white border-0">{project.category}</span>
-            </div>
+        <div className="absolute top-3 left-3 z-50 bg-black/70 backdrop-blur-xl px-3 py-1.5 rounded-md shadow-sm border border-white/10" style={{ borderLeftWidth: '4px', borderLeftColor: categoryColor }}>
+           <span className="text-[10px] uppercase font-bold tracking-wider text-white border-0">{project.category}</span>
+        </div>
 
-            <div className="absolute bottom-5 left-5 right-5 z-30 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
-               <h3 className="text-3xl md:text-3xl font-normal text-white tracking-tight mb-2 drop-shadow-md" style={{ fontFamily: 'var(--font-display)' }}>{project.title}</h3>
-               <div className="flex justify-between items-center text-xs text-white/80 font-medium">
-                  <span className="tracking-wide uppercase">{project.mediaType === 'video' ? 'Click to Play' : 'View Gallery'}</span>
-                  <span className="font-sans flex items-center gap-1 drop-shadow-md pb-0.5 border-b border-white/30">View <ArrowUpRight size={14} /></span>
-               </div>
-            </div>
-          </>
-        )}
+        <div className="absolute bottom-5 left-5 right-5 z-50">
+           <h3 className="text-2xl md:text-[2rem] font-normal text-white tracking-tight mb-2 drop-shadow-md" style={{ fontFamily: 'var(--font-display)' }}>{project.title}</h3>
+           <div className="flex justify-between items-center text-xs text-white/80 font-medium">
+              <span className="tracking-wide uppercase">{project.type}</span>
+              <a
+                href={project.videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pointer-events-auto font-sans flex items-center gap-1 drop-shadow-md pb-0.5 border-b border-white/30 hover:text-white"
+              >
+                YouTube <ArrowUpRight size={14} />
+              </a>
+           </div>
+        </div>
       </div>
     </div>
   );
@@ -524,13 +529,23 @@ function TestimonialCarousel() {
   const [isPaused, setIsPaused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const testimonials = [
-    { id: 1, image: 'https://placehold.co/800x480/white/000000?text=Customer+Screenshot+1&font=Inter' },
-    { id: 2, image: 'https://placehold.co/800x480/white/000000?text=Customer+Screenshot+2&font=Inter' },
-    { id: 3, image: 'https://placehold.co/800x480/white/000000?text=Customer+Screenshot+3&font=Inter' },
-    { id: 4, image: 'https://placehold.co/800x480/white/000000?text=Customer+Screenshot+4&font=Inter' },
-    { id: 5, image: 'https://placehold.co/800x480/white/000000?text=Customer+Screenshot+5&font=Inter' },
-  ];
+  const testimonials = Array.from({ length: 11 }, (_, index) => ({
+    id: index + 1,
+    image: `/testimonials/testimonial-${String(index + 1).padStart(2, '0')}.png`,
+    alt: `Client testimonial screenshot ${index + 1}`,
+  }));
+
+  const getCardScrollAmount = () => {
+    const track = scrollRef.current;
+    if (!track) return 0;
+
+    const firstCard = track.firstElementChild as HTMLElement | null;
+    if (!firstCard) return track.clientWidth;
+
+    const styles = window.getComputedStyle(track);
+    const gap = parseFloat(styles.columnGap || styles.gap || '0') || 0;
+    return firstCard.offsetWidth + gap;
+  };
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -538,21 +553,17 @@ function TestimonialCarousel() {
       interval = setInterval(() => {
         const el = scrollRef.current;
         if (!el) return;
-        
-        let cardWidth = 0;
-        if (window.innerWidth >= 768) {
-           cardWidth = el.clientWidth / 2.2;
-        } else {
-           cardWidth = el.clientWidth / 1.1;
-        }
-        
+
+        const cardWidth = getCardScrollAmount();
+        if (!cardWidth) return;
+
         let nextScroll = el.scrollLeft + cardWidth;
         const maxScroll = el.scrollWidth - el.clientWidth;
-        
+
         if (nextScroll >= maxScroll - 10) {
-           nextScroll = 0;
+          nextScroll = 0;
         }
-        
+
         el.scrollTo({ left: nextScroll, behavior: 'smooth' });
       }, 5000);
     }
@@ -563,10 +574,11 @@ function TestimonialCarousel() {
   const handleScroll = () => {
     if (!scrollRef.current) return;
     const el = scrollRef.current;
-    
-    let cardWidth = window.innerWidth >= 768 ? el.clientWidth / 2.2 : el.clientWidth / 1.1;
-    const scrollPos = el.scrollLeft + (cardWidth / 2);
-    const index = Math.min(Math.floor(scrollPos / cardWidth), testimonials.length - 1);
+
+    const cardWidth = getCardScrollAmount();
+    if (!cardWidth) return;
+
+    const index = Math.min(Math.round(el.scrollLeft / cardWidth), testimonials.length - 1);
     setActiveIndex(index);
   };
 
@@ -604,10 +616,10 @@ function TestimonialCarousel() {
   };
 
   const scrollByAmount = (direction: number) => {
-     if(scrollRef.current) {
-        const amount = window.innerWidth >= 768 ? scrollRef.current.clientWidth / 2.2 : scrollRef.current.clientWidth / 1.1;
-        scrollRef.current.scrollBy({ left: amount * direction, behavior: 'smooth' });
-     }
+    if (scrollRef.current) {
+      const amount = getCardScrollAmount();
+      scrollRef.current.scrollBy({ left: amount * direction, behavior: 'smooth' });
+    }
   };
 
   return (
@@ -680,12 +692,14 @@ function TestimonialCarousel() {
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {testimonials.map((t) => (
-             <div 
-               key={t.id} 
-               className="flex-shrink-0 w-[calc(100%/1.1)] md:w-[calc(100%/2.2)] snap-start md:snap-center bg-white border border-[#e0e0e0] rounded-[12px] p-2 md:p-4 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] transition-shadow duration-300 h-[280px] md:h-[340px] flex items-center justify-center relative overflow-hidden"
-             >
-                <img src={t.image} alt="Client Review Screenshot" className="w-full h-full object-contain pointer-events-none" />
-             </div>
+             <div
+               key={t.id}
+               className="flex-shrink-0 w-[250px] md:w-[280px] snap-start rounded-[30px] bg-[#111318] border border-black/10 p-3 md:p-4 shadow-[0_18px_50px_rgba(0,0,0,0.10)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.14)] transition-shadow duration-300"
+              >
+                <div className="w-full h-[520px] md:h-[580px] rounded-[22px] overflow-hidden bg-[#0a0b10] flex items-center justify-center ring-1 ring-white/6">
+                  <img src={t.image} alt={t.alt} className="w-full h-full object-contain object-top pointer-events-none" />
+                </div>
+              </div>
           ))}
         </div>
 
@@ -772,7 +786,6 @@ function SectionDivider() {
 }
 
 export default function App() {
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
 
   // Filtering System State
@@ -821,61 +834,6 @@ export default function App() {
       <PageLoader />
       <ScrollProgressBar />
       <BackToTopButton />
-      
-      {/* Project Modal (AnimatePresence allows graceful unmounting) */}
-      <AnimatePresence>
-        {selectedProject && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-12 bg-background/90 backdrop-blur-md"
-            onClick={() => setSelectedProject(null)}
-          >
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.5 }}
-              className="relative w-full max-w-6xl max-h-full overflow-hidden flex flex-col md:flex-row bg-background border border-border shadow-2xl rounded-sm"
-              onClick={e => e.stopPropagation()} // Keep modal open when clicking inside
-            >
-              <button 
-                onClick={() => setSelectedProject(null)} 
-                className="absolute top-4 right-4 md:top-6 md:right-6 z-[60] p-2 bg-background/50 backdrop-blur-sm rounded-full text-foreground hover:bg-white hover:text-background transition-colors cursor-pointer"
-                aria-label="Close modal"
-              >
-                <X size={20} />
-              </button>
-              
-              {/* Media Section */}
-              <div className="w-full md:w-[65%] bg-black">
-                <video 
-                  src={selectedProject.videoUrl} 
-                  autoPlay 
-                  controls 
-                  playsInline
-                  className="w-full h-full object-contain aspect-video" 
-                />
-              </div>
-              
-              {/* Information / Details Section */}
-              <div className="w-full md:w-[35%] p-8 md:p-12 flex flex-col justify-center border-l border-border/50">
-                <h3 className="text-3xl md:text-5xl mb-3 text-foreground tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-                  {selectedProject.title}
-                </h3>
-                <div className="flex items-center gap-3 mb-8">
-                  <span className="w-2 h-2 rounded-full bg-foreground/30"></span>
-                  <span className="text-xs uppercase tracking-widest text-muted-foreground">{selectedProject.type}</span>
-                </div>
-                <p className="text-muted-foreground font-sans leading-[1.7] text-[15px]">
-                  {selectedProject.description}
-                </p>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <div 
         className="absolute inset-0 w-full h-[100vh] z-0 overflow-hidden bg-[#050505]"
@@ -1075,7 +1033,7 @@ export default function App() {
             <div className={`grid-container w-full transition-all duration-150 ease-out ${animatingCards ? 'opacity-0 scale-[0.95]' : 'opacity-100 scale-100'}`}>
               {displayProjects.map((project, index) => (
                 <div key={`${project.id}`} className="break-inside-avoid mb-8">
-                  <PortfolioCard project={project} onClickImage={setSelectedProject} />
+                  <PortfolioCard project={project} />
                 </div>
               ))}
               {displayProjects.length === 0 && (
