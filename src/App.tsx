@@ -144,7 +144,7 @@ function AnimatedWaveform() {
       const totalWidth = numBars * barWidth + (numBars - 1) * actualGap;
       const offsetX = width > 0 ? (width - totalWidth) / 2 : 0;
 
-      const rects = Array.from(svg.querySelectorAll("rect"));
+      const rects = Array.from(svg.querySelectorAll("rect")) as SVGRectElement[];
       let hoverIndex: number | null = null;
       
       if (hoverXRef.current !== null) {
@@ -1186,21 +1186,6 @@ export default function App() {
               </form>
             </div>
             
-            <div className="reveal-target reveal-slide-up grid grid-cols-2 gap-16 lg:gap-24 text-sm w-full lg:w-auto" style={{ transitionDelay: '200ms' }}>
-              <div className="flex flex-col gap-6">
-                <span className="text-foreground uppercase tracking-widest text-[11px] font-semibold mb-2">Socials</span>
-                <a href="#" className="hover:text-foreground text-muted-foreground transition-colors">Instagram</a>
-                <a href="#" className="hover:text-foreground text-muted-foreground transition-colors">Vimeo</a>
-                <a href="#" className="hover:text-foreground text-muted-foreground transition-colors">Behance</a>
-                <a href="#" className="hover:text-foreground text-muted-foreground transition-colors">LinkedIn</a>
-              </div>
-              <div className="flex flex-col gap-6">
-                <span className="text-foreground uppercase tracking-widest text-[11px] font-semibold mb-2">Legal</span>
-                <a href="#" className="hover:text-foreground text-muted-foreground transition-colors">Privacy Policy</a>
-                <a href="#" className="hover:text-foreground text-muted-foreground transition-colors">Terms of Service</a>
-                <a href="#" className="hover:text-foreground text-muted-foreground transition-colors">Cookie Usage</a>
-              </div>
-            </div>
           </div>
 
           <div className="reveal-target reveal-slide-up max-w-7xl mx-auto mt-32 pt-8 border-t border-border/30 flex flex-col md:flex-row justify-between items-center text-[11px] uppercase tracking-widest text-muted-foreground gap-4" style={{ transitionDelay: '300ms' }}>
