@@ -4,7 +4,7 @@
 */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, ArrowUpRight, Inbox, Scissors, Palette, CheckCircle, Star, ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react';
+import { Play, ArrowUpRight, Inbox, Scissors, Palette, CheckCircle, Star, ChevronLeft, ChevronRight, ArrowUp, ChevronDown } from 'lucide-react';
 
 function useScrollReveal() {
   useEffect(() => {
@@ -912,6 +912,128 @@ function SectionDivider() {
   );
 }
 
+const faqItems = [
+  {
+    q: "How long does a typical edit take to deliver?",
+    a: "Most short-form edits (Reels, Shorts, TikToks) are delivered within 24 hours of receiving your raw files. Longer projects like full YouTube videos or SaaS explainers typically take 48–72 hours. Rush delivery is available on request."
+  },
+  {
+    q: "How many revisions do I get?",
+    a: "Unlimited revisions — every package includes as many rounds as needed until you're 100% satisfied. I don't charge extra for feedback; getting the cut right is the whole point."
+  },
+  {
+    q: "What file formats and resolutions do you export in?",
+    a: "Delivery includes your choice of MP4/MOV at 4K, 2K, 1080p, or platform-optimised presets (9:16 for Reels/Shorts, 16:9 for YouTube, 1:1 for feeds). ProRes or H.265 masters available on request."
+  },
+  {
+    q: "What should I send you to get started?",
+    a: "Raw footage (any format), any reference edits you like the feel of, a brief or script if you have one, and your preferred music or SFX. The more context you give, the faster we move — but I can work with minimal briefs too."
+  },
+  {
+    q: "Do you handle music licensing?",
+    a: "Yes. I source royalty-free tracks from premium libraries (Epidemic Sound, Artlist) or sync to music you already own. If you need fully licensed commercial music I can advise on the most cost-effective route."
+  },
+  {
+    q: "Can you create animated graphics and motion elements from scratch?",
+    a: "Absolutely. Beyond cutting, I build custom lower-thirds, kinetic typography, transitions, and full explainer animations in After Effects and Premiere — no need for a separate motion designer."
+  },
+  {
+    q: "What are your rates?",
+    a: "Pricing depends on video length, complexity, and turnaround speed. Book a free 15-minute call and I'll give you an exact quote within the hour. Most single short-form edits start at a flat rate with volume discounts for ongoing retainers."
+  },
+  {
+    q: "Do you offer retainer packages for consistent content output?",
+    a: "Yes — monthly retainers are available for creators and brands who need a predictable volume of content. Retainer clients get priority queue, a dedicated Notion board, and lower per-video rates. Reach out to discuss a custom plan."
+  }
+];
+
+function FAQ() {
+  const [openIndex, setOpenIndex] = React.useState<number | null>(null);
+
+  const toggle = (i: number) => setOpenIndex(prev => (prev === i ? null : i));
+
+  return (
+    <section id="faq" className="relative z-10 w-full py-32 bg-transparent">
+      <div className="max-w-4xl mx-auto px-6 md:px-16">
+        {/* Header */}
+        <div className="reveal-target reveal-slide-up flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-border/50 pb-10 mb-14">
+          <div>
+            <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold inline-block border border-border/20 px-4 py-1.5 rounded-full bg-black/5 backdrop-blur-sm mb-5">Quick Answers</span>
+            <h2 className="text-5xl md:text-6xl tracking-tight leading-none" style={{ fontFamily: 'var(--font-display)' }}>Frequently<br />Asked</h2>
+          </div>
+          <p className="text-muted-foreground text-sm max-w-xs leading-relaxed">Everything you need to know before we start working together. Still have questions? Just reach out.</p>
+        </div>
+
+        {/* Accordion */}
+        <div className="flex flex-col divide-y divide-border/30">
+          {faqItems.map((item, i) => {
+            const isOpen = openIndex === i;
+            return (
+              <div key={i} className="reveal-target reveal-slide-up" style={{ transitionDelay: `${i * 60}ms` }}>
+                <button
+                  id={`faq-btn-${i}`}
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-panel-${i}`}
+                  onClick={() => toggle(i)}
+                  className="w-full flex justify-between items-center py-6 text-left gap-6 cursor-pointer group"
+                >
+                  <span
+                    className="text-base md:text-lg font-medium text-foreground/90 group-hover:text-foreground transition-colors leading-snug"
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    {item.q}
+                  </span>
+                  <span
+                    className="shrink-0 w-8 h-8 rounded-full border border-border/60 flex items-center justify-center text-muted-foreground group-hover:border-[#FF008A] group-hover:text-[#FF008A] transition-all duration-300"
+                    style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.35s cubic-bezier(0.16,1,0.3,1), border-color 0.3s, color 0.3s' }}
+                  >
+                    <ChevronDown size={16} strokeWidth={2} />
+                  </span>
+                </button>
+
+                {/* Answer panel — CSS height transition */}
+                <div
+                  id={`faq-panel-${i}`}
+                  role="region"
+                  aria-labelledby={`faq-btn-${i}`}
+                  style={{
+                    display: 'grid',
+                    gridTemplateRows: isOpen ? '1fr' : '0fr',
+                    transition: 'grid-template-rows 0.4s cubic-bezier(0.16,1,0.3,1)'
+                  }}
+                >
+                  <div style={{ overflow: 'hidden' }}>
+                    <p className="text-muted-foreground text-[15px] leading-relaxed pb-7 max-w-2xl">
+                      {item.a}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* CTA row */}
+        <div className="reveal-target reveal-slide-up mt-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pt-10 border-t border-border/30" style={{ transitionDelay: '500ms' }}>
+          <p className="text-sm text-muted-foreground">Still unsure? Let's talk it through on a quick call.</p>
+          <a
+            href="https://calendly.com/reachresolve89/schedule-a-meeting-with-us"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-[#222] text-white rounded-full flex flex-row items-center pl-6 pr-2 py-2 gap-3 text-sm font-medium hover:bg-black transition-colors cursor-pointer inline-flex"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            Book a Free Call
+            <div className="bg-white/20 rounded-full p-2 flex items-center justify-center">
+              <ArrowUpRight size={16} className="text-white" />
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function App() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
 
@@ -1005,6 +1127,7 @@ export default function App() {
           <a href="#about" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>About</a>
           <a href="#projects" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>Works</a>
           <a href="#testimonial" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>Testimonials</a>
+          <a href="#faq" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>FAQ</a>
         </nav>
         <a href="https://calendly.com/reachresolve89/schedule-a-meeting-with-us" target="_blank" rel="noopener noreferrer" className="bg-black text-white rounded-xl flex flex-row items-center pl-4 pr-1.5 py-1.5 gap-2 text-[13px] font-medium hover:bg-black/80 transition-all duration-300 inline-flex" style={{ fontFamily: 'var(--font-body)' }}>
           Book Meeting
@@ -1199,6 +1322,9 @@ export default function App() {
 
           </div>
         </section>
+
+        <FAQ />
+        <SectionDivider />
 
         <footer id="testimonial" className="relative z-10 w-full bg-background pt-32 pb-12 px-8 md:px-16 overflow-hidden">
           <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start gap-20">
