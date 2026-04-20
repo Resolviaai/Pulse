@@ -459,17 +459,6 @@ const projects: Project[] = [
     youtubeId: 'f7VM2PEiWVQ',
     videoUrl: 'https://youtube.com/shorts/f7VM2PEiWVQ',
     poster: 'https://i.ytimg.com/vi/f7VM2PEiWVQ/hqdefault.jpg'
-  },
-  {
-    id: 13,
-    title: 'Crows are Smart',
-    category: '2D Hoodie Guy Style',
-    type: '2D Hoodie Guy Animation',
-    mediaType: 'video',
-    description: 'A science-focused animated short that blends hoodie-guy charm with captivating facts — built to stop the scroll and drive shares.',
-    youtubeId: 'gqMfVQWYmmg',
-    videoUrl: 'https://youtube.com/shorts/gqMfVQWYmmg',
-    poster: 'https://i.ytimg.com/vi/gqMfVQWYmmg/hqdefault.jpg'
   }
 ];
 
@@ -1093,8 +1082,8 @@ export default function App() {
                     key={i}
                     onClick={() => handleCategoryClick(cat)}
                     className={`px-4 py-2.5 md:px-5 md:py-2.5 lg:px-3 xl:px-4 rounded-full text-[10px] md:text-[11px] font-semibold leading-none uppercase tracking-wider md:tracking-widest lg:tracking-wider transition-all duration-300 flex-shrink-0 cursor-pointer whitespace-nowrap ${isActive
-                        ? 'bg-[#FF008A] text-white shadow-[0_0_15px_rgba(255,0,138,0.4)] border border-[#FF008A]'
-                        : 'bg-transparent text-foreground/70 border border-border/60 hover:border-foreground/40 hover:text-foreground'
+                      ? 'bg-[#FF008A] text-white shadow-[0_0_15px_rgba(255,0,138,0.4)] border border-[#FF008A]'
+                      : 'bg-transparent text-foreground/70 border border-border/60 hover:border-foreground/40 hover:text-foreground'
                       }`}
                   >
                     {cat}
