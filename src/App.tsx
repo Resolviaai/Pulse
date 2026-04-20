@@ -60,6 +60,60 @@ function ScrollCounter({ value, duration = 1600, suffix = "" }: { value: number,
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
+// Animates 0 → 1B+ using a logarithmic scale so every order of magnitude
+// (K → M → B) gets equal screen time — the number visibly climbs through
+// hundreds of Ks, then hundreds of Ms, before landing on 1B+.
+function BillionCounter({ duration = 3000 }: { duration?: number }) {
+  const [display, setDisplay] = useState('0');
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    let isCounting = false;
+
+    const fmt = (n: number): string => {
+      if (n < 1_000) return Math.floor(n).toString();
+      if (n < 1_000_000) return `${Math.floor(n / 1_000)}K`;
+      if (n < 1_000_000_000) return `${Math.floor(n / 1_000_000)}M`;
+      return '1B';
+    };
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !isCounting) {
+        isCounting = true;
+        let startTimestamp: number | null = null;
+
+        const step = (timestamp: number) => {
+          if (!startTimestamp) startTimestamp = timestamp;
+          const rawProgress = Math.min((timestamp - startTimestamp) / duration, 1);
+
+          // Logarithmic mapping: progress 0→1 maps to value 0→1B
+          // Each decade (K, M, B) occupies ~1/9 of the total log range
+          const current = rawProgress === 0 ? 0 : Math.min(Math.pow(10, rawProgress * 9) - 1, 1_000_000_000);
+
+          setDisplay(fmt(current));
+
+          if (rawProgress < 1) {
+            window.requestAnimationFrame(step);
+          } else {
+            setDisplay('1B');
+          }
+        };
+
+        window.requestAnimationFrame(step);
+        observer.disconnect();
+      }
+    }, { threshold: 0.15 });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [duration]);
+
+  return <span ref={ref}>{display}+</span>;
+}
+
 function MagneticButton({ children, href, className, style }: any) {
   const buttonRef = React.useRef<HTMLAnchorElement>(null);
 
@@ -1011,37 +1065,37 @@ export default function App() {
 
               <div className="text-center flex flex-col items-center justify-center py-4 reveal-target reveal-slide-up" style={{ transitionDelay: '0ms' }}>
                 <div className="text-[clamp(2.8rem,6vw,5rem)] font-bold text-[#FF008A] mb-2 leading-none" style={{ fontFamily: 'var(--font-display)' }}>
-                  <ScrollCounter value={47} suffix="M+" />
+                  <ScrollCounter value={118} suffix="+" />
                 </div>
-                <div className="text-[0.75rem] uppercase tracking-[0.15em] text-muted-foreground font-medium">Total Views</div>
+                <div className="text-[0.75rem] uppercase tracking-[0.15em] text-muted-foreground font-medium">Clients Served</div>
               </div>
 
               <div className="text-center flex flex-col items-center justify-center py-4 reveal-target reveal-slide-up" style={{ transitionDelay: '100ms' }}>
                 <div className="text-[clamp(2.8rem,6vw,5rem)] font-bold text-[#FF008A] mb-2 leading-none" style={{ fontFamily: 'var(--font-display)' }}>
-                  <ScrollCounter value={120} suffix="K+" />
-                </div>
-                <div className="text-[0.75rem] uppercase tracking-[0.15em] text-muted-foreground font-medium">Subscribers Helped Grow</div>
-              </div>
-
-              <div className="text-center flex flex-col items-center justify-center py-4 reveal-target reveal-slide-up" style={{ transitionDelay: '200ms' }}>
-                <div className="text-[clamp(2.8rem,6vw,5rem)] font-bold text-[#FF008A] mb-2 leading-none" style={{ fontFamily: 'var(--font-display)' }}>
-                  <ScrollCounter value={200} suffix="+" />
+                  <ScrollCounter value={1000} suffix="+" />
                 </div>
                 <div className="text-[0.75rem] uppercase tracking-[0.15em] text-muted-foreground font-medium">Videos Edited</div>
               </div>
 
+              <div className="text-center flex flex-col items-center justify-center py-4 reveal-target reveal-slide-up" style={{ transitionDelay: '200ms' }}>
+                <div className="text-[clamp(2.8rem,6vw,5rem)] font-bold text-[#FF008A] mb-2 leading-none" style={{ fontFamily: 'var(--font-display)' }}>
+                  <BillionCounter duration={3000} />
+                </div>
+                <div className="text-[0.75rem] uppercase tracking-[0.15em] text-muted-foreground font-medium">Views Generated</div>
+              </div>
+
               <div className="text-center flex flex-col items-center justify-center py-4 reveal-target reveal-slide-up" style={{ transitionDelay: '300ms' }}>
                 <div className="text-[clamp(2.8rem,6vw,5rem)] font-bold text-[#FF008A] mb-2 leading-none" style={{ fontFamily: 'var(--font-display)' }}>
-                  <ScrollCounter value={82} suffix="%" />
+                  <span>4.8<span style={{ fontSize: '0.55em' }}>★</span></span>
                 </div>
-                <div className="text-[0.75rem] uppercase tracking-[0.15em] text-muted-foreground font-medium">Avg Retention Rate</div>
+                <div className="text-[0.75rem] uppercase tracking-[0.15em] text-muted-foreground font-medium">Average Star Rating</div>
               </div>
             </div>
 
             {/* Row 2: Trust signals */}
             <div className="flex flex-wrap justify-center items-center gap-4 reveal-target reveal-slide-up" style={{ transitionDelay: '400ms' }}>
               {[
-                { text: "⚡ 3-Day Avg Delivery" },
+                { text: "⚡ 24-Hour Avg Delivery" },
                 { text: "🔁 Unlimited Revisions" },
                 { text: "🎯 Retention-First Editing" },
                 { text: "🌍 Worked with Creators in 6 Countries" }
