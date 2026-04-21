@@ -1,4 +1,4 @@
-/**
+﻿/**
 * @license
 * SPDX-License-Identifier: Apache-2.0
 */
@@ -1391,10 +1391,17 @@ export default function App() {
           <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start gap-20">
 
             <div className="w-full lg:w-1/2 reveal-target reveal-slide-up">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest mb-6">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                </span>
+                Availability slot: {Math.floor(Math.random() * 2) + 1}
+              </div>
               <h2 className="text-6xl md:text-[64px] mb-6 leading-none tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Let's work<br />together.</h2>
 
               <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-sm">Ready to bring your vision to life? Fill out the form or reach out directly.</p>
-              <a href="mailto:hello@pulse.studio" className="text-base text-foreground underline decoration-border hover:decoration-foreground underline-offset-4 transition-colors font-medium">hello@pulse.studio</a>
+              <a href="mailto:2resolvia@gmail.com" className="text-base text-foreground underline decoration-border hover:decoration-foreground underline-offset-4 transition-colors font-medium">2resolvia@gmail.com</a>
 
               <form onSubmit={handleFormSubmit} className="flex flex-col gap-8 mt-12 w-full max-w-md">
                 <div className="relative">
