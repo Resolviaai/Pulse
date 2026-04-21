@@ -1144,14 +1144,33 @@ export default function App() {
     const isSpam = formData._contact_phone.trim().length > 0;
 
     try {
-      const { error } = await supabase.from('leads').insert({
+      // Fetch detailed location (City, Region, Country) instead of just relying on the 2-letter country code server-side
+      let locationDetail = undefined;
+      try {
+        const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json');
+        const geoData = await geoRes.json();
+        const parts = [geoData.city, geoData.region, geoData.country].filter(Boolean);
+        if (parts.length > 0) {
+          locationDetail = parts.join(', ');
+        }
+      } catch (err) {
+        console.warn('Could not fetch detailed location, falling back to server default', err);
+      }
+
+      const insertPayload: any = {
         portfolio_id: PORTFOLIO_ID,
         portfolio_url: window.location.origin,
         name: formData.name,
         email: formData.email,
         project_details: formData.message,
         is_spam: isSpam
-      });
+      };
+
+      if (locationDetail) {
+        insertPayload.location = locationDetail;
+      }
+
+      const { error } = await supabase.from('leads').insert(insertPayload);
 
       if (error) {
         console.error('Submission error:', error);
