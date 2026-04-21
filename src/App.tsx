@@ -1,10 +1,11 @@
-﻿/**
+/**
 * @license
 * SPDX-License-Identifier: Apache-2.0
 */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, ArrowUpRight, Inbox, Scissors, Palette, CheckCircle, Star, ChevronLeft, ChevronRight, ArrowUp, ChevronDown } from 'lucide-react';
+import { Play, ArrowUpRight, Inbox, Scissors, Palette, CheckCircle, Star, ChevronLeft, ChevronRight, ArrowUp, ChevronDown, Loader2 } from 'lucide-react';
+import { supabase } from './lib/supabase';
 
 function useScrollReveal() {
   useEffect(() => {
@@ -1092,8 +1093,13 @@ function FAQ() {
   );
 }
 
+// This UUID uniquely identifies this specific portfolio.
+const PORTFOLIO_ID = '3a5f9737-142f-48d6-95af-ec090287a38b';
+
 export default function App() {
-  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', message: '', _contact_phone: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   // Filtering System State
   const [activeCategory, setActiveCategory] = useState("All");
@@ -1129,11 +1135,38 @@ export default function App() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Pulse Studio - Form Data Submitted:', formData);
-    // In future: hook to backend database
-    setFormData({ name: '', email: '', message: '' });
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+
+    // Honeypot spam protection check
+    const isSpam = formData._contact_phone.trim().length > 0;
+
+    try {
+      const { error } = await supabase.from('leads').insert({
+        portfolio_id: PORTFOLIO_ID,
+        portfolio_url: window.location.origin,
+        name: formData.name,
+        email: formData.email,
+        project_details: formData.message,
+        is_spam: isSpam
+      });
+
+      if (error) {
+        console.error('Submission error:', error);
+        setSubmitStatus('error');
+      } else {
+        setSubmitStatus('success');
+        setFormData({ name: '', email: '', message: '', _contact_phone: '' });
+        setTimeout(() => setSubmitStatus('idle'), 4000);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -1446,12 +1479,41 @@ export default function App() {
                   <label htmlFor="message" className="absolute left-0 top-0 text-[13px] text-muted-foreground transition-all peer-placeholder-shown:text-[15px] peer-placeholder-shown:top-0 peer-focus:-top-5 peer-focus:text-[11px] peer-focus:uppercase peer-focus:tracking-widest peer-focus:text-foreground">Project Details</label>
                 </div>
 
-                <button type="submit" className="bg-[#222] text-white rounded-full flex flex-row items-center pl-6 pr-2 py-2 gap-3 text-sm font-medium hover:bg-black transition-colors self-center lg:self-start mt-4 cursor-pointer" style={{ fontFamily: 'var(--font-body)' }}>
-                  Submit Query
-                  <div className="bg-white/20 rounded-full p-2 flex items-center justify-center">
-                    <ArrowUpRight size={16} className="text-white" />
-                  </div>
-                </button>
+                {/* Honeypot field for spam bots */}
+                <div style={{ position: 'absolute', opacity: 0, top: 0, left: -9999, zIndex: -1 }}>
+                  <input
+                    type="text"
+                    name="_contact_phone"
+                    tabIndex={-1}
+                    value={formData._contact_phone}
+                    onChange={handleFormChange}
+                    autoComplete="off"
+                    aria-hidden="true"
+                  />
+                </div>
+
+                <div className="flex flex-col items-center lg:items-start mt-4">
+                  <button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="bg-[#222] text-white rounded-full flex flex-row items-center pl-6 pr-2 py-2 gap-3 text-sm font-medium hover:bg-black transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    {isSubmitting ? 'Sending...' : submitStatus === 'success' ? 'Message Sent!' : 'Submit Query'}
+                    <div className="bg-white/20 rounded-full p-2 flex items-center justify-center">
+                      {isSubmitting ? (
+                        <Loader2 size={16} className="text-white animate-spin" />
+                      ) : submitStatus === 'success' ? (
+                        <CheckCircle size={16} className="text-white" />
+                      ) : (
+                        <ArrowUpRight size={16} className="text-white" />
+                      )}
+                    </div>
+                  </button>
+                  {submitStatus === 'error' && (
+                    <span className="text-[#FF008A] text-xs font-medium mt-3 tracking-wide uppercase">Something went wrong. Please try again.</span>
+                  )}
+                </div>
               </form>
             </div>
 
