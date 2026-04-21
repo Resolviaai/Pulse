@@ -912,6 +912,64 @@ function SectionDivider() {
   );
 }
 
+function WhyMe() {
+  const pros = [
+    { emoji: '🏆', title: 'More exp than the role needs' },
+    { emoji: '🚀', title: 'Delivers before the deadline' },
+    { emoji: '📈', title: 'YouTube growth specialist' },
+    { emoji: '🤖', title: '2 yrs of AI-powered workflow' },
+    { emoji: '🤝', title: 'Comfortable working in teams' },
+    { emoji: '⏰', title: 'Available 12–14 hrs a day' },
+  ];
+
+  const cons = [
+    { emoji: '🔍', title: 'Will stalk your channel', sub: 'for research, obviously' },
+    { emoji: '💡', title: 'Unsolicited growth advice', sub: "you're welcome in advance" },
+    { emoji: '😂', title: 'Good humour (sometimes)', sub: 'meetings run 5 min over. my fault' },
+    { emoji: '📅', title: 'Often fully booked', sub: 'check availability at the bottom' },
+    { emoji: '⚡', title: 'Startup founder on the side', sub: 'multi-threading at its finest' },
+  ];
+
+  return (
+    <section className="relative z-10 w-full py-24 bg-transparent overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 md:px-16">
+        <div className="reveal-target reveal-slide-up flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-border/50 pb-8 mb-12">
+          <div>
+            <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold inline-block border border-border/20 px-4 py-1.5 rounded-full bg-black/5 backdrop-blur-sm mb-4">Why work with me?</span>
+            <h2 className="text-5xl md:text-6xl tracking-tight leading-none" style={{ fontFamily: 'var(--font-display)' }}>Pros &amp; Cons</h2>
+          </div>
+          <p className="text-muted-foreground text-sm max-w-[240px] leading-relaxed opacity-70">
+            Full transparency. Spoiler: the cons aren&apos;t really cons.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 md:gap-5">
+          <div className="flex flex-col gap-2 md:gap-3 reveal-target reveal-slide-up" style={{ transitionDelay: '100ms' }}>
+            <span className="text-[10px] md:text-[11px] uppercase tracking-[0.18em] font-bold text-emerald-500 mb-1">✓ Pros</span>
+            {pros.map((item, i) => (
+              <div key={i} className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3.5 rounded-xl md:rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.12] hover:border-emerald-500/40 transition-all duration-300 cursor-default">
+                <span className="text-sm md:text-lg shrink-0 leading-none">{item.emoji}</span>
+                <span className="text-[10px] md:text-[13px] font-medium text-foreground/85 leading-snug">{item.title}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2 md:gap-3 reveal-target reveal-slide-up" style={{ transitionDelay: '200ms' }}>
+            <span className="text-[10px] md:text-[11px] uppercase tracking-[0.18em] font-bold text-[#FF008A] mb-1">⚠ Cons</span>
+            {cons.map((item, i) => (
+              <div key={i} className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3.5 rounded-xl md:rounded-2xl border border-[#FF008A]/10 bg-[#FF008A]/[0.04] hover:bg-[#FF008A]/[0.09] hover:border-[#FF008A]/25 transition-all duration-300 cursor-default">
+                <span className="text-sm md:text-lg shrink-0 leading-none">{item.emoji}</span>
+                <div className="min-w-0">
+                  <div className="text-[10px] md:text-[13px] font-medium text-foreground/85 leading-snug">{item.title}</div>
+                  <div className="text-[9px] md:text-[11px] text-muted-foreground/55 italic mt-0.5 truncate">{item.sub}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 const faqItems = [
   {
     q: "How long does a typical edit take to deliver?",
@@ -1120,9 +1178,9 @@ export default function App() {
       </div>
 
       <header className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex flex-row items-center justify-between px-3 py-2 w-[95%] max-w-5xl bg-gray-200/55 backdrop-blur-2xl backdrop-saturate-[1.8] border border-white/20 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:bg-gray-200/65 transition-all duration-500">
-        <div className="pl-3 text-[17px] font-semibold text-black/90 tracking-tight" style={{ fontFamily: 'var(--font-body)' }}>
+        <a href="#home" className="pl-3 text-[17px] font-semibold text-black/90 tracking-tight hover:text-black transition-colors duration-200" style={{ fontFamily: 'var(--font-body)' }}>
           Pulse
-        </div>
+        </a>
         <nav className="hidden md:flex flex-row items-center gap-1">
           <a href="#about" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>About</a>
           <a href="#projects" className="text-sm font-medium text-black/70 hover:text-black/95 px-4 py-2 rounded-xl transition-all duration-300" style={{ fontFamily: 'var(--font-body)' }}>Works</a>
@@ -1230,6 +1288,9 @@ export default function App() {
             </div>
           </div>
         </section>
+        <SectionDivider />
+
+        <WhyMe />
         <SectionDivider />
 
         <section id="projects" className="relative z-10 w-full py-32 bg-transparent">
