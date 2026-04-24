@@ -1512,10 +1512,10 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-col items-center lg:items-start mt-4">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={isSubmitting}
-                    className="bg-[#222] text-white rounded-full flex flex-row items-center pl-6 pr-2 py-2 gap-3 text-sm font-medium hover:bg-black transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
+                    className="bg-[#222] text-white rounded-full flex flex-row items-center pl-6 pr-2 py-2 gap-3 text-sm font-medium hover:bg-black transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ fontFamily: 'var(--font-body)' }}
                   >
                     {isSubmitting ? 'Sending...' : submitStatus === 'success' ? 'Message Sent!' : 'Submit Query'}
@@ -1539,7 +1539,7 @@ export default function App() {
           </div>
 
           <div className="reveal-target reveal-slide-up max-w-7xl mx-auto mt-32 pt-8 border-t border-border/30 flex flex-col md:flex-row justify-between items-center text-[11px] uppercase tracking-widest text-muted-foreground gap-4" style={{ transitionDelay: '300ms' }}>
-            <p>&copy; 2026 Pulse Studio. All rights reserved.</p>
+            <p>&copy; 2026 Pulse. All rights reserved.</p>
             <p>Designed with Intent</p>
           </div>
         </footer>
